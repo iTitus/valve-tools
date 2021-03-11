@@ -8,6 +8,7 @@ import info.ata4.bsplib.struct.BspData;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.Iterator;
@@ -43,6 +44,10 @@ public final class MapInfo implements Comparable<MapInfo> {
             throw new UncheckedIOException(e);
         }
 
+        if (!Files.isRegularFile(path)) {
+            throw new IllegalArgumentException("given path is not a file");
+        }
+
         String name = real.getFileName().toString();
         int lastDot = name.lastIndexOf('.');
         if (lastDot > 0) {
@@ -70,6 +75,10 @@ public final class MapInfo implements Comparable<MapInfo> {
             real = path.toRealPath();
         } catch (IOException e) {
             throw new UncheckedIOException(e);
+        }
+
+        if (!Files.isRegularFile(path)) {
+            throw new IllegalArgumentException("given path is not a file");
         }
 
         return new MapInfo(real, name);
@@ -111,17 +120,17 @@ public final class MapInfo implements Comparable<MapInfo> {
         return countBombsites() == 1 && hasWingmanBuyzonesForBothTeams();
     }
 
-    public boolean hasAnyEntitiesNamedForWingman() {
+    public boolean isNormalMapWithWingmanSupport() {
+        return isWingmanCompatible() && !isWingmanOnlyMap();
+    }
+
+    public boolean hasEntityNamedForWingman() {
         return hasEntity(e -> e.getTargetName() != null
                 && (e.getTargetName().contains("2v2") || e.getTargetName().contains("wingman")));
     }
 
     public boolean isWingmanCompatible() {
-        return hasStandardWingmanActivationScript() || hasAnyEntitiesNamedForWingman() || isWingmanOnlyMap();
-    }
-
-    public boolean isNormalMapWithWingmanSupport() {
-        return isWingmanCompatible() && !isWingmanOnlyMap();
+        return hasStandardWingmanActivationScript() || hasEntityNamedForWingman() || isWingmanOnlyMap();
     }
 
     private long countBombsites() {

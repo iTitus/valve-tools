@@ -33,37 +33,6 @@ public class CollectionDetails extends AbstractResult {
         return children;
     }
 
-    public static class Child {
-
-        @SerializedName("publishedfileid")
-        private final long publishedFileId;
-
-        @SerializedName("sortorder")
-        private final int sortOrder;
-
-        @SerializedName("filetype")
-        @JsonAdapter(FileType.ById.class)
-        private final FileType fileType;
-
-        public Child(long publishedFileId, int sortOrder, FileType fileType) {
-            this.publishedFileId = publishedFileId;
-            this.sortOrder = sortOrder;
-            this.fileType = fileType;
-        }
-
-        public long getPublishedFileId() {
-            return publishedFileId;
-        }
-
-        public int getSortOrder() {
-            return sortOrder;
-        }
-
-        public FileType getFileType() {
-            return fileType;
-        }
-    }
-
     /**
      * enum EWorkshopFileType
      */
@@ -124,6 +93,37 @@ public class CollectionDetails extends AbstractResult {
             public FileType read(JsonReader in) throws IOException {
                 return findById(in.nextInt());
             }
+        }
+    }
+
+    public static class Child {
+
+        @SerializedName("publishedfileid")
+        private final long publishedFileId;
+
+        @SerializedName("sortorder")
+        private final int sortOrder;
+
+        @SerializedName("filetype")
+        @JsonAdapter(FileType.ById.class)
+        private final FileType fileType;
+
+        public Child(long publishedFileId, int sortOrder, FileType fileType) {
+            this.publishedFileId = publishedFileId;
+            this.sortOrder = sortOrder;
+            this.fileType = fileType;
+        }
+
+        public long getPublishedFileId() {
+            return publishedFileId;
+        }
+
+        public int getSortOrder() {
+            return sortOrder;
+        }
+
+        public FileType getFileType() {
+            return fileType;
         }
     }
 }
