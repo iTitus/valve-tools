@@ -8,6 +8,7 @@ import com.google.gson.stream.JsonWriter;
 import io.github.ititus.steam_api.AbstractResult;
 import io.github.ititus.steam_api.Result;
 import io.github.ititus.steam_api.json.CBoolean;
+import io.github.ititus.steam_api.json.IdAdapter;
 import io.github.ititus.steam_api.json.UnixTime;
 
 import java.io.IOException;
@@ -267,7 +268,7 @@ public class PublishedFileDetails extends AbstractResult {
         return tags;
     }
 
-    public enum Visibility {
+    public enum Visibility implements IdAdapter.HasId {
 
         Public(0),
         FriendsOnly(1),
@@ -290,20 +291,15 @@ public class PublishedFileDetails extends AbstractResult {
             return VALUES[id];
         }
 
+        @Override
         public int getId() {
             return ordinal();
         }
 
-        public static class ById extends TypeAdapter<Visibility> {
+        public static class ById extends IdAdapter<Visibility> {
 
-            @Override
-            public void write(JsonWriter out, Visibility value) throws IOException {
-                out.value(value.getId());
-            }
-
-            @Override
-            public Visibility read(JsonReader in) throws IOException {
-                return findById(in.nextInt());
+            public ById() {
+                super(Visibility::findById);
             }
         }
     }

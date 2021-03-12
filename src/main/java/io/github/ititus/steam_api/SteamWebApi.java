@@ -8,33 +8,28 @@ import io.github.ititus.steam_api.remote_storage.RemoteStorage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
-import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
-import java.net.http.HttpRequest.BodyPublisher;
-import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipInputStream;
 
+import static io.github.ititus.steam_api.util.HttpUtil.STATUS_OK;
 import static java.net.http.HttpResponse.BodyHandlers;
 
 public final class SteamWebApi {
 
     private final String apiKey;
-
     private final HttpClient httpClient;
 
-    private SteamWebApi(String apiKey) {
+    private SteamWebApi(String apiKey, HttpClient httpClient) {
         this.apiKey = apiKey;
-        this.httpClient = HttpClient.newBuilder()
-                //.followRedirects(HttpClient.Redirect.NORMAL)
-                .build();
+        this.httpClient = httpClient;
     }
 
     public static SteamWebApi create() {
@@ -45,48 +40,6 @@ public final class SteamWebApi {
         return new Builder();
     }
 
-    private static String buildQueryString(Map<String, String> params) {
-        if (params == null || params.isEmpty()) {
-            return "";
-        }
-
-        StringBuilder query = new StringBuilder();
-        boolean first = true;
-        for (Map.Entry<String, String> param : params.entrySet()) {
-            if (first) {
-                query.append('?');
-                first = false;
-            } else {
-                query.append('&');
-            }
-
-            query.append(URLEncoder.encode(param.getKey(), StandardCharsets.UTF_8))
-                    .append('=')
-                    .append(URLEncoder.encode(param.getValue(), StandardCharsets.UTF_8));
-        }
-
-        return query.toString();
-    }
-
-    private static BodyPublisher ofFormData(Map<String, String> data) {
-        if (data == null || data.isEmpty()) {
-            return BodyPublishers.noBody();
-        }
-
-        StringBuilder builder = new StringBuilder();
-        for (Map.Entry<String, String> entry : data.entrySet()) {
-            if (builder.length() > 0) {
-                builder.append("&");
-            }
-
-            builder.append(URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8))
-                    .append("=")
-                    .append(URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8));
-        }
-
-        return BodyPublishers.ofString(builder.toString());
-    }
-
     public String getApiKey() {
         return apiKey;
     }
@@ -95,10 +48,10 @@ public final class SteamWebApi {
         return new RemoteStorage(this);
     }
 
-    public String request(HttpMethod httpMethod, String url, Format format, Map<String, String> params) throws SteamWebApiException {
-        params = buildParams(format, params);
+    public String request(ApiMethod apiMethod, String url, ResponseFormat responseFormat, Map<String, String> params) throws SteamWebApiException {
+        params = buildParams(responseFormat, params);
 
-        HttpRequest request = httpMethod.buildRequest(url, params)
+        HttpRequest request = apiMethod.buildRequest(url, params)
                 .header("Accept-Encoding", "gzip, deflate")
                 .build();
         HttpResponse<InputStream> response;
@@ -109,7 +62,6 @@ public final class SteamWebApi {
         }
 
         List<String> encodings = response.headers().allValues("Content-Encoding");
-        boolean compressed = !encodings.isEmpty();
         if (encodings.size() > 1) {
             throw new HttpIOException("Multiple encoding methods not supported");
         }
@@ -152,20 +104,20 @@ public final class SteamWebApi {
         int status = response.statusCode();
         String body = os.toString(StandardCharsets.UTF_8);
 
-        if (status != 200) {
+        if (status != STATUS_OK) {
             throw new HttpStatusException(status, body);
         }
 
         return body;
     }
 
-    private Map<String, String> buildParams(Format format, Map<String, String> params) {
+    private Map<String, String> buildParams(ResponseFormat responseFormat, Map<String, String> params) {
         if (params == null) {
             params = new HashMap<>();
         }
 
-        if (format != Format.JSON) {
-            params.put("format", format.getName());
+        if (responseFormat != ResponseFormat.JSON) {
+            params.put("format", responseFormat.getName());
         }
 
         if (apiKey != null) {
@@ -175,53 +127,15 @@ public final class SteamWebApi {
         return params;
     }
 
-    public enum HttpMethod {
-
-        GET {
-            @Override
-            public HttpRequest.Builder buildRequest(String url, Map<String, String> params) {
-                return HttpRequest.newBuilder()
-                        .uri(URI.create(url + buildQueryString(params)))
-                        .GET();
-            }
-        },
-        POST {
-            @Override
-            public HttpRequest.Builder buildRequest(String url, Map<String, String> params) {
-                return HttpRequest.newBuilder()
-                        .uri(URI.create(url))
-                        .header("Content-Type", "application/x-www-form-urlencoded")
-                        .POST(ofFormData(params));
-            }
-        };
-
-        public abstract HttpRequest.Builder buildRequest(String url, Map<String, String> params);
-
-    }
-
-    public enum Format {
-
-        JSON("json"),
-        XML("xml"),
-        VDF("vdf");
-
-        private final String name;
-
-        Format(String name) {
-            this.name = name;
-        }
-
-        public String getName() {
-            return name;
-        }
-    }
-
     public static final class Builder {
 
         private String apiKey = null;
+        private HttpClient httpClient = null;
 
-        private SteamWebApi.Builder apiKey(String apiKey) {
-            if (apiKey != null && !apiKey.matches("^[0-9A-F]{32}$")) {
+        public Builder apiKey(String apiKey) {
+            if (this.apiKey != null) {
+                throw new IllegalStateException("api key already set");
+            } else if (apiKey != null && !apiKey.matches("^[0-9A-F]{32}$")) {
                 throw new IllegalArgumentException("invalid api key");
             }
 
@@ -229,8 +143,21 @@ public final class SteamWebApi {
             return this;
         }
 
+        public Builder httpClient(HttpClient httpClient) {
+            if (this.httpClient != null) {
+                throw new IllegalStateException("http client already set");
+            }
+
+            this.httpClient = Objects.requireNonNull(httpClient);
+            return this;
+        }
+
         public SteamWebApi build() {
-            return new SteamWebApi(apiKey);
+            if (httpClient == null) {
+                httpClient = HttpClient.newHttpClient();
+            }
+
+            return new SteamWebApi(apiKey, httpClient);
         }
     }
 }

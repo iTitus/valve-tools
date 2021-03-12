@@ -30,9 +30,9 @@ public class Interface {
     }
 
     protected String request(
-            SteamWebApi.HttpMethod httpMethod,
+            ApiMethod apiMethod,
             String url,
-            SteamWebApi.Format format,
+            ResponseFormat responseFormat,
             Parameters parameters
     ) throws SteamWebApiException {
         Map<String, String> stringParams;
@@ -42,6 +42,6 @@ public class Interface {
             stringParams = parameters.toMap();
         }
 
-        return api.request(httpMethod, url, format, stringParams);
+        return api.request(apiMethod, url, responseFormat, stringParams);
     }
 }

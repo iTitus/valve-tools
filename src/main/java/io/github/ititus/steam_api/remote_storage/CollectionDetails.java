@@ -1,14 +1,11 @@
 package io.github.ititus.steam_api.remote_storage;
 
-import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
 import io.github.ititus.steam_api.AbstractResult;
 import io.github.ititus.steam_api.Result;
+import io.github.ititus.steam_api.json.IdAdapter;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -36,7 +33,7 @@ public class CollectionDetails extends AbstractResult {
     /**
      * enum EWorkshopFileType
      */
-    public enum FileType {
+    public enum FileType implements IdAdapter.HasId {
 
         Community(0, "normal Workshop item that can be subscribed to"),
         Microtransaction(1, "Workshop item that is meant to be voted on for the purpose of selling in-game"),
@@ -74,6 +71,7 @@ public class CollectionDetails extends AbstractResult {
             return VALUES[id];
         }
 
+        @Override
         public int getId() {
             return ordinal();
         }
@@ -82,16 +80,10 @@ public class CollectionDetails extends AbstractResult {
             return description;
         }
 
-        public static class ById extends TypeAdapter<FileType> {
+        public static class ById extends IdAdapter<FileType> {
 
-            @Override
-            public void write(JsonWriter out, FileType value) throws IOException {
-                out.value(value.getId());
-            }
-
-            @Override
-            public FileType read(JsonReader in) throws IOException {
-                return findById(in.nextInt());
+            public ById() {
+                super(FileType::findById);
             }
         }
     }

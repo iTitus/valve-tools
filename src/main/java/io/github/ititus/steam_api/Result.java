@@ -1,17 +1,14 @@
 package io.github.ititus.steam_api;
 
-import com.google.gson.TypeAdapter;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
+import io.github.ititus.steam_api.json.IdAdapter;
 
-import java.io.IOException;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
 /**
  * enum EResult
  */
-public enum Result {
+public enum Result implements IdAdapter.HasId {
 
     None(0, "no result"),
     OK(1, "success"),
@@ -162,6 +159,7 @@ public enum Result {
         return VALUES[id];
     }
 
+    @Override
     public int getId() {
         return ordinal();
     }
@@ -170,16 +168,10 @@ public enum Result {
         return description;
     }
 
-    public static class ById extends TypeAdapter<Result> {
+    public static class ById extends IdAdapter<Result> {
 
-        @Override
-        public void write(JsonWriter out, Result value) throws IOException {
-            out.value(value.getId());
-        }
-
-        @Override
-        public Result read(JsonReader in) throws IOException {
-            return findById(in.nextInt());
+        public ById() {
+            super(Result::findById);
         }
     }
 }

@@ -10,16 +10,16 @@ public abstract class Method<T extends Interface, R> implements Parameters {
     private final T apiInterface;
     private final String name;
     private final int version;
-    private final SteamWebApi.HttpMethod httpMethod;
-    private final SteamWebApi.Format format;
+    private final ApiMethod apiMethod;
+    private final ResponseFormat responseFormat;
 
-    protected Method(T apiInterface, String name, int version, SteamWebApi.HttpMethod httpMethod,
-                     SteamWebApi.Format format) {
+    protected Method(T apiInterface, String name, int version, ApiMethod apiMethod,
+                     ResponseFormat responseFormat) {
         this.apiInterface = Objects.requireNonNull(apiInterface);
         this.name = Objects.requireNonNull(name);
         this.version = version;
-        this.httpMethod = Objects.requireNonNull(httpMethod);
-        this.format = Objects.requireNonNull(format);
+        this.apiMethod = Objects.requireNonNull(apiMethod);
+        this.responseFormat = Objects.requireNonNull(responseFormat);
     }
 
     public T getApiInterface() {
@@ -34,12 +34,12 @@ public abstract class Method<T extends Interface, R> implements Parameters {
         return version;
     }
 
-    public SteamWebApi.HttpMethod getHttpMethod() {
-        return httpMethod;
+    public ApiMethod getHttpMethod() {
+        return apiMethod;
     }
 
-    public SteamWebApi.Format getFormat() {
-        return format;
+    public ResponseFormat getFormat() {
+        return responseFormat;
     }
 
     public String getBaseUrl() {
@@ -54,7 +54,7 @@ public abstract class Method<T extends Interface, R> implements Parameters {
 
     public R request() throws SteamWebApiException {
         try {
-            return parse(apiInterface.request(httpMethod, getUrl(), format, this));
+            return parse(apiInterface.request(apiMethod, getUrl(), responseFormat, this));
         } catch (SteamWebApiException e) {
             throw e;
         } catch (Exception e) {

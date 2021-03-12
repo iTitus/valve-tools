@@ -1,37 +1,33 @@
 package io.github.ititus.steam_api;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static java.lang.String.valueOf;
+
 public interface Parameters {
 
-    @SafeVarargs
-    static <T> JsonArray toPrimitiveArray(T... arr) {
-        JsonArray jsonArray = new JsonArray();
-        for (T t : arr) {
-            if (t == null) {
-                jsonArray.add(JsonNull.INSTANCE);
-            } else if (t instanceof Boolean) {
-                jsonArray.add((Boolean) t);
-            } else if (t instanceof Character) {
-                jsonArray.add((Character) t);
-            } else if (t instanceof Number) {
-                jsonArray.add((Number) t);
-            } else if (t instanceof String) {
-                jsonArray.add((String) t);
-            } else if (t instanceof JsonElement) {
-                jsonArray.add((JsonElement) t);
-            } else {
-                throw new UnsupportedOperationException("cannot add " + t + " to json array");
-            }
+    static void writeArray(Map<String, String> params, String countName, String arrayName, int... arr) {
+        params.put(countName, valueOf(arr.length));
+        for (int i = 0; i < arr.length; i++) {
+            params.put(arrayName + "[" + i + "]", valueOf(arr[i]));
         }
+    }
 
-        return jsonArray;
+    static void writeArray(Map<String, String> params, String countName, String arrayName, long... arr) {
+        params.put(countName, valueOf(arr.length));
+        for (int i = 0; i < arr.length; i++) {
+            params.put(arrayName + "[" + i + "]", valueOf(arr[i]));
+        }
+    }
+
+    static void writeArray(Map<String, String> params, String countName, String arrayName, String... arr) {
+        params.put(countName, valueOf(arr.length));
+        for (int i = 0; i < arr.length; i++) {
+            params.put(arrayName + "[" + i + "]", valueOf(arr[i]));
+        }
     }
 
     default JsonObject toJson() {

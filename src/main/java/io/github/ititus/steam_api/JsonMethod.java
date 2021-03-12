@@ -14,8 +14,8 @@ public abstract class JsonMethod<T extends Interface, R> extends Method<T, R> {
             .serializeNulls()
             .create();
 
-    protected JsonMethod(T apiInterface, String name, int version, SteamWebApi.HttpMethod httpMethod) {
-        super(apiInterface, name, version, httpMethod, SteamWebApi.Format.JSON);
+    protected JsonMethod(T apiInterface, String name, int version, ApiMethod apiMethod) {
+        super(apiInterface, name, version, apiMethod, ResponseFormat.JSON);
     }
 
     protected static <S> List<S> extractArrayElements(JsonObject json, String arrayKey, int expectedArrayLength,
