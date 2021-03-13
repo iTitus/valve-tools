@@ -1,20 +1,21 @@
 package io.github.ititus.steam_api;
 
 import com.google.gson.annotations.JsonAdapter;
+import io.github.ititus.steam_api.json.EnumByOrdinal;
 
-public abstract class AbstractResult {
+public class BaseResult {
 
     /**
      * EResult m_eResult; // The result of the operation.
      */
-    @JsonAdapter(Result.ById.class)
+    @JsonAdapter(EnumByOrdinal.class)
     private final Result result;
 
-    protected AbstractResult(Result result) {
+    public BaseResult(Result result) {
         this.result = result;
     }
 
-    public final Result getResult() {
+    public Result getResult() {
         return result;
     }
 }

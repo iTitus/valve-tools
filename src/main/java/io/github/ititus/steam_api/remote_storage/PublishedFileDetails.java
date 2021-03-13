@@ -1,26 +1,21 @@
 package io.github.ititus.steam_api.remote_storage;
 
-import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
-import io.github.ititus.steam_api.AbstractResult;
+import io.github.ititus.steam_api.BaseResult;
 import io.github.ititus.steam_api.Result;
 import io.github.ititus.steam_api.json.CBoolean;
-import io.github.ititus.steam_api.json.IdAdapter;
+import io.github.ititus.steam_api.json.EnumByOrdinal;
 import io.github.ititus.steam_api.json.UnixTime;
 
-import java.io.IOException;
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Set;
 
 /**
  * struct RemoteStorageGetPublishedFileDetailsResult_t
  */
-public class PublishedFileDetails extends AbstractResult {
+public class PublishedFileDetails extends BaseResult {
 
 /*
 {
@@ -28,7 +23,8 @@ public class PublishedFileDetails extends AbstractResult {
 	int32 m_nPreviewFileSize;		// Size of the preview file
 	EWorkshopFileType m_eFileType;	// Type of the file
 	bool m_bAcceptedForUse;			// developer has specifically flagged this item as accepted in the Workshop
-};*/
+};
+*/
 
     /**
      * PublishedFileId_t m_nPublishedFileId;
@@ -113,7 +109,7 @@ public class PublishedFileDetails extends AbstractResult {
     /**
      * ERemoteStoragePublishedFileVisibility m_eVisibility;
      */
-    @JsonAdapter(Visibility.ById.class)
+    @JsonAdapter(EnumByOrdinal.class)
     private final Visibility visibility;
 
     /**
@@ -141,15 +137,14 @@ public class PublishedFileDetails extends AbstractResult {
      * char m_rgchTags[k_cchTagListMax]; // comma separated list of all tags associated with this file <br>
      * bool m_bTagsTruncated; // whether the list of tags was too long to be returned in the provided buffer
      */
-    @JsonAdapter(TagAdapter.class)
-    private final Set<String> tags;
+    private final Set<Tag> tags;
 
     public PublishedFileDetails(Result result, long publishedFileId, long creator, int creatorAppId,
                                 int consumerAppId, String fileName, int fileSize, String fileUrl, long hcontentFile,
                                 String previewUrl, long hcontentPreview, String title, String description,
                                 Instant timeCreated, Instant timeUpdated, Visibility visibility, boolean banned,
                                 String banReason, int subscriptions, int favorited, int lifetimeSubscriptions,
-                                int lifetimeFavorited, int views, Set<String> tags) {
+                                int lifetimeFavorited, int views, Set<Tag> tags) {
         super(result);
         this.publishedFileId = publishedFileId;
         this.creator = creator;
@@ -264,79 +259,46 @@ public class PublishedFileDetails extends AbstractResult {
         return views;
     }
 
-    public Set<String> getTags() {
+    public Set<Tag> getTags() {
         return tags;
     }
 
-    public enum Visibility implements IdAdapter.HasId {
+    public enum Visibility {
 
-        Public(0),
-        FriendsOnly(1),
-        Private(2),
-        Unlisted(3);
+        Public,
+        FriendsOnly,
+        Private,
+        Unlisted
 
-        private static final Visibility[] VALUES = values();
-
-        Visibility(int id) {
-            if (id != ordinal()) {
-                throw new IllegalArgumentException("id must be equal to ordinal");
-            }
-        }
-
-        public static Visibility findById(int id) {
-            if (id < 0 || id >= VALUES.length) {
-                throw new NoSuchElementException("Visibility with the given id does not exist");
-            }
-
-            return VALUES[id];
-        }
-
-        @Override
-        public int getId() {
-            return ordinal();
-        }
-
-        public static class ById extends IdAdapter<Visibility> {
-
-            public ById() {
-                super(Visibility::findById);
-            }
-        }
     }
 
-    public static class TagAdapter extends TypeAdapter<Set<String>> {
+    public static final class Tag {
 
-        @Override
-        public void write(JsonWriter out, Set<String> value) throws IOException {
-            out.beginArray();
+        private final String tag;
 
-            for (String tag : value) {
-                out.beginObject();
-                out.name("tag");
-                out.value(tag);
-                out.endObject();
-            }
+        public Tag(String tag) {
+            this.tag = Objects.requireNonNull(tag);
+        }
 
-            out.endArray();
+        public String getTag() {
+            return tag;
         }
 
         @Override
-        public Set<String> read(JsonReader in) throws IOException {
-            Set<String> tags = new HashSet<>();
-            in.beginArray();
-
-            while (in.hasNext()) {
-                in.beginObject();
-                if (!"tag".equals(in.nextName())) {
-                    throw new IllegalStateException("expected 'tag'");
-                }
-
-                tags.add(in.nextString());
-                in.endObject();
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            } else if (o == null || getClass() != o.getClass()) {
+                return false;
             }
 
-            in.endArray();
-            return tags;
+            Tag tag = (Tag) o;
+            return this.tag.equals(tag.tag);
+        }
+
+        @Override
+        public int hashCode() {
+            return tag.hashCode();
         }
     }
 }

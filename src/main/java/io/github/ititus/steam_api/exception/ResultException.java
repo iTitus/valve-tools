@@ -5,7 +5,7 @@ import io.github.ititus.steam_api.Result;
 public class ResultException extends SteamWebApiException {
 
     public ResultException(Result result) {
-        super(result != null ? result + " (" + result.getId() + ") - " + result.getDescription() : "null status");
+        super(result != null ? result + " (" + result.ordinal() + ") - " + result.getDescription() : "null status");
     }
 
     public ResultException(String message) {

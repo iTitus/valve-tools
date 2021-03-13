@@ -18,10 +18,11 @@ public abstract class JsonMethod<T extends Interface, R> extends Method<T, R> {
         super(apiInterface, name, version, apiMethod, ResponseFormat.JSON);
     }
 
-    protected static <S> List<S> extractArrayElements(JsonObject json, String arrayKey, int expectedArrayLength,
-                                                      Class<S> resultClass) throws SteamWebApiException {
+    protected static <S extends BaseResult> List<S> extractArrayElements(JsonObject json, String arrayKey,
+                                                                         int expectedArrayLength,
+                                                                         Class<S> resultClass) throws SteamWebApiException {
         JsonObject obj = json.getAsJsonObject().get("response").getAsJsonObject();
-        Result result = Result.findById(obj.get("result").getAsInt());
+        Result result = GSON.fromJson(obj, BaseResult.class).getResult();
         int resultCount = obj.get("resultcount").getAsInt();
         if (result != Result.OK) {
             throw new ResultException(result);
@@ -37,11 +38,9 @@ public abstract class JsonMethod<T extends Interface, R> extends Method<T, R> {
         List<S> results = new ArrayList<>(expectedArrayLength);
         for (int i = 0; i < expectedArrayLength; i++) {
             S resultObj = GSON.fromJson(arr.get(i), resultClass);
-            if (resultObj instanceof AbstractResult) {
-                Result resultEnum = ((AbstractResult) resultObj).getResult();
-                if (resultEnum != Result.OK) {
-                    throw new ResultException(resultEnum);
-                }
+            Result resultEnum = resultObj.getResult();
+            if (resultEnum != Result.OK) {
+                throw new ResultException(resultEnum);
             }
 
             results.add(resultObj);
