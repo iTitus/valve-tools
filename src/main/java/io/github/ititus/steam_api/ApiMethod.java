@@ -1,6 +1,6 @@
 package io.github.ititus.steam_api;
 
-import io.github.ititus.steam_api.util.HttpUtil;
+import io.github.ititus.util.HttpUtil;
 
 import java.net.URI;
 import java.net.http.HttpRequest;

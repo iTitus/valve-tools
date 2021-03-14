@@ -1,4 +1,4 @@
-package io.github.ititus.steam_api.util;
+package io.github.ititus.util;
 
 import java.net.URLEncoder;
 import java.net.http.HttpRequest.BodyPublisher;

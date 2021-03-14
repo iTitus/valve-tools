@@ -19,7 +19,7 @@ import java.util.Objects;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipInputStream;
 
-import static io.github.ititus.steam_api.util.HttpUtil.STATUS_OK;
+import static io.github.ititus.util.HttpUtil.STATUS_OK;
 import static java.net.http.HttpResponse.BodyHandlers;
 
 public final class SteamWebApi {
@@ -40,27 +40,7 @@ public final class SteamWebApi {
         return new Builder();
     }
 
-    public String getApiKey() {
-        return apiKey;
-    }
-
-    public RemoteStorage remoteStorage() {
-        return new RemoteStorage(this);
-    }
-
-    public String request(ApiMethod apiMethod, String url, ResponseFormat responseFormat, Map<String, String> params) throws SteamWebApiException {
-        params = buildParams(responseFormat, params);
-
-        HttpRequest request = apiMethod.buildRequest(url, params)
-                .header("Accept-Encoding", "gzip, deflate")
-                .build();
-        HttpResponse<InputStream> response;
-        try {
-            response = httpClient.send(request, BodyHandlers.ofInputStream());
-        } catch (Exception e) {
-            throw new SteamWebApiException("Error while communicating with the Steam Web API", e);
-        }
-
+    private static String extractBody(HttpResponse<InputStream> response) throws SteamWebApiException {
         List<String> encodings = response.headers().allValues("Content-Encoding");
         if (encodings.size() > 1) {
             throw new HttpIOException("Multiple encoding methods not supported");
@@ -101,8 +81,32 @@ public final class SteamWebApi {
             }
         }
 
+        return os.toString(StandardCharsets.UTF_8);
+    }
+
+    public String getApiKey() {
+        return apiKey;
+    }
+
+    public RemoteStorage remoteStorage() {
+        return new RemoteStorage(this);
+    }
+
+    public String request(ApiMethod apiMethod, String url, ResponseFormat responseFormat, Map<String, String> params) throws SteamWebApiException {
+        params = buildParams(responseFormat, params);
+
+        HttpRequest request = apiMethod.buildRequest(url, params)
+                .header("Accept-Encoding", "gzip, deflate")
+                .build();
+        HttpResponse<InputStream> response;
+        try {
+            response = httpClient.send(request, BodyHandlers.ofInputStream());
+        } catch (Exception e) {
+            throw new SteamWebApiException("Error while communicating with the Steam Web API", e);
+        }
+
+        String body = extractBody(response);
         int status = response.statusCode();
-        String body = os.toString(StandardCharsets.UTF_8);
 
         if (status != STATUS_OK) {
             throw new HttpStatusException(status, body);

@@ -1,12 +1,14 @@
 package io.github.ititus.source_map_analyser;
 
+import io.github.ititus.util.SystemUtil;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static io.github.ititus.source_map_analyser.SystemUtil.Os.*;
+import static io.github.ititus.util.SystemUtil.Os.*;
 
 public final class SteamInstallation {
 

@@ -1,4 +1,4 @@
-package io.github.ititus.source_map_analyser;
+package io.github.ititus.util;
 
 import io.github.ititus.data.Lazy;
 
