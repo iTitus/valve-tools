@@ -1,6 +1,5 @@
 module io.github.ititus.valve_tools.steam_api {
-    requires java.base;
-    requires ititus.commons;
+    requires io.github.ititus.commons;
 
     exports io.github.ititus.valve_tools.steam_api;
 }

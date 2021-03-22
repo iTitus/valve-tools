@@ -6,6 +6,5 @@ plugins {
 dependencies {
     implementation project(':steam-api')
 
-    implementation 'io.github.ititus:ititus-commons:1.4.4'
     implementation files('libs/bspsrc-1.4.0-SNAPSHOT.jar')
 }
