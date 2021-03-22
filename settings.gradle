@@ -1,2 +1,5 @@
 rootProject.name = 'valve-tools'
-
+include 'steam-api'
+include 'steam-web-api'
+include 'source-map-lib'
+include 'source-map-analyzer'
