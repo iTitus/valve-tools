@@ -1,6 +1,6 @@
 package io.github.ititus.valve_tools.steam_api;
 
-import io.github.ititus.valve_tools.steam_api.util.OS;
+import io.github.ititus.system.OS;
 
 import java.nio.file.Files;
 import java.nio.file.Path;

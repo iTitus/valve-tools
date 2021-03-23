@@ -1,6 +1,7 @@
 package io.github.ititus.valve_tools.steam_web_api;
 
-import io.github.ititus.valve_tools.steam_web_api.util.HttpUtil;
+import io.github.ititus.io.BodyPublishers;
+import io.github.ititus.io.HttpUtil;
 
 import java.net.URI;
 import java.net.http.HttpRequest;
@@ -17,7 +18,7 @@ public enum ApiMethod {
     POST((url, params) -> HttpRequest.newBuilder()
             .uri(URI.create(url))
             .header("Content-Type", "application/x-www-form-urlencoded")
-            .POST(HttpUtil.ofFormData(params))
+            .POST(BodyPublishers.ofFormData(params))
     );
 
     private final BiFunction<String, Map<String, String>, HttpRequest.Builder> buildRequestFunction;

@@ -3,13 +3,11 @@ package io.github.ititus.valve_tools.steam_web_api.remote_storage;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 import io.github.ititus.valve_tools.steam_web_api.BaseResult;
-import io.github.ititus.valve_tools.steam_web_api.Result;
 import io.github.ititus.valve_tools.steam_web_api.json.CBoolean;
 import io.github.ititus.valve_tools.steam_web_api.json.EnumByOrdinal;
 import io.github.ititus.valve_tools.steam_web_api.json.UnixTime;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -153,7 +151,7 @@ public class PublishedFileDetails extends BaseResult {
         this.hcontentFile = 0;
         this.previewUrl = null;
         this.hcontentPreview = 0;
-        this.title =null;
+        this.title = null;
         this.description = null;
         this.timeCreated = null;
         this.timeUpdated = null;
@@ -274,7 +272,7 @@ public class PublishedFileDetails extends BaseResult {
         private final String tag;
 
         @SuppressWarnings("unused")
-        private Tag(){
+        private Tag() {
             this.tag = null;
         }
 

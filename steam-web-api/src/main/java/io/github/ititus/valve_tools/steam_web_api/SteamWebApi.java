@@ -1,10 +1,10 @@
 package io.github.ititus.valve_tools.steam_web_api;
 
+import io.github.ititus.io.HttpStatus;
 import io.github.ititus.valve_tools.steam_web_api.exception.HttpIOException;
 import io.github.ititus.valve_tools.steam_web_api.exception.HttpStatusException;
 import io.github.ititus.valve_tools.steam_web_api.exception.SteamWebApiException;
 import io.github.ititus.valve_tools.steam_web_api.remote_storage.RemoteStorage;
-import io.github.ititus.valve_tools.steam_web_api.util.HttpUtil;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -106,9 +106,9 @@ public final class SteamWebApi {
         }
 
         String body = extractBody(response);
-        int status = response.statusCode();
+        HttpStatus status = HttpStatus.of(response.statusCode());
 
-        if (status != HttpUtil.STATUS_OK) {
+        if (!status.isOk()) {
             throw new HttpStatusException(status, body);
         }
 
