@@ -6,7 +6,7 @@ import com.google.gson.stream.JsonWriter;
 
 import java.io.IOException;
 
-public class CBoolean extends TypeAdapter<Boolean> {
+public final class CBoolean extends TypeAdapter<Boolean> {
 
     @Override
     public void write(JsonWriter out, Boolean value) throws IOException {

@@ -7,9 +7,12 @@ import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
 import java.time.Instant;
 
-public class UnixTime {
+public final class UnixTime {
 
-    public static class Seconds extends TypeAdapter<Instant> {
+    private UnixTime() {
+    }
+
+    public static final class Seconds extends TypeAdapter<Instant> {
 
         @Override
         public void write(JsonWriter out, Instant value) throws IOException {
@@ -22,7 +25,7 @@ public class UnixTime {
         }
     }
 
-    public static class Millis extends TypeAdapter<Instant> {
+    public static final class Millis extends TypeAdapter<Instant> {
 
         @Override
         public void write(JsonWriter out, Instant value) throws IOException {
