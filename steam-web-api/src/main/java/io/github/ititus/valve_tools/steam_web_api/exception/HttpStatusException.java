@@ -5,6 +5,6 @@ import io.github.ititus.io.HttpStatus;
 public class HttpStatusException extends HttpIOException {
 
     public HttpStatusException(HttpStatus status, String body) {
-        super("HTTP Status: " + status + " (" + status.code() + ") | " + body);
+        super("HTTP Status: " + status + " | " + body);
     }
 }
