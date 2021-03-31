@@ -7,19 +7,20 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public final class SteamInstallation {
 
-    private static final Map<OS, List<Path>> PATH_CANDIDATES = Map.of(
+    private static final Map<OS, List<Supplier<Path>>> PATH_CANDIDATES = Map.of(
             OS.WINDOWS, List.of(
-                    Path.of("C:", "Program Files (x86)", "Steam"),
-                    Path.of("C:", "Program Files", "Steam")
+                    () -> Path.of("C:", "Program Files (x86)", "Steam"),
+                    () -> Path.of("C:", "Program Files", "Steam")
             ),
             OS.MAC, List.of(
-                    Path.of("~", "Library", "Application Support", "Steam")
+                    () -> Path.of("~", "Library", "Application Support", "Steam")
             ),
             OS.UNIX, List.of(
-                    Path.of("~", ".local", "share", "Steam")
+                    () -> Path.of("~", ".local", "share", "Steam")
             )
     );
 
@@ -29,10 +30,14 @@ public final class SteamInstallation {
         this.steamDir = steamDir;
     }
 
-    private static Optional<Path> testCandidates(List<Path> candidates) {
-        for (Path candidate : candidates) {
-            if (Files.isDirectory(candidate)) {
-                return Optional.of(candidate);
+    private static Optional<Path> testCandidates(List<Supplier<Path>> candidates) {
+        for (Supplier<Path> candidate : candidates) {
+            try {
+                Path p = candidate.get();
+                if (Files.isDirectory(p)) {
+                    return Optional.of(p);
+                }
+            } catch (Exception ignored) {
             }
         }
 
@@ -40,9 +45,9 @@ public final class SteamInstallation {
     }
 
     public static SteamInstallation find() {
-        List<Path> candidates = PATH_CANDIDATES.get(OS.current());
+        List<Supplier<Path>> candidates = PATH_CANDIDATES.get(OS.current());
         if (candidates == null || candidates.isEmpty()) {
-            throw new RuntimeException("No known candidate directories for steam installation");
+            throw new RuntimeException("No known candidate directories for steam installation on this OS");
         }
 
         return testCandidates(candidates)
