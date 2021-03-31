@@ -67,11 +67,11 @@ public final class SteamInstallation {
         return steamDir;
     }
 
-    public Path getGameDir(SteamGame game) {
-        return getGameDir(game.getInstallationDir());
+    public Path getAppDir(SteamApp app) {
+        return getAppDir(app.getInstallDir());
     }
 
-    public Path getGameDir(String gameName) {
-        return steamDir.resolve(Path.of("steamapps", "common", gameName));
+    public Path getAppDir(String installDir) {
+        return steamDir.resolve(Path.of("steamapps", "common", installDir));
     }
 }

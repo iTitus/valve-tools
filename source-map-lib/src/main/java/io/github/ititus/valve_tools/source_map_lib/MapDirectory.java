@@ -1,6 +1,6 @@
 package io.github.ititus.valve_tools.source_map_lib;
 
-import io.github.ititus.valve_tools.steam_api.SteamGame;
+import io.github.ititus.valve_tools.steam_api.SteamApp;
 import io.github.ititus.valve_tools.steam_api.SteamInstallation;
 
 import java.io.IOException;
@@ -32,7 +32,7 @@ public final class MapDirectory {
     public static MapDirectory csgo() {
         return of(
                 SteamInstallation.find()
-                        .getGameDir(SteamGame.COUNTERSTRIKE_GLOBAL_OFFENSIVE)
+                        .getAppDir(SteamApp.COUNTERSTRIKE_GLOBAL_OFFENSIVE)
                         .resolve(Path.of("csgo", "maps"))
         );
     }
