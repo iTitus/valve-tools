@@ -76,34 +76,39 @@ public final class WingmanFinder {
                 .collect(Collectors.toList());
 
         System.out.println("\nTime Created:");
-        printSorted(wingmanWorkshopMaps, PublishedFileDetails::getTimeCreated, true);
+        printPairsSorted(wingmanWorkshopMaps, PublishedFileDetails::getTimeCreated, WingmanFinder::mapToString, true);
 
         System.out.println("\nTime Updated:");
-        printSorted(wingmanWorkshopMaps, PublishedFileDetails::getTimeUpdated, true);
+        printPairsSorted(wingmanWorkshopMaps, PublishedFileDetails::getTimeUpdated, WingmanFinder::mapToString, true);
 
         System.out.println("\nSubscriptions:");
-        printSorted(wingmanWorkshopMaps, PublishedFileDetails::getSubscriptions, true);
+        printPairsSorted(wingmanWorkshopMaps, PublishedFileDetails::getSubscriptions, WingmanFinder::mapToString, true);
 
         System.out.println("\nFavorited:");
-        printSorted(wingmanWorkshopMaps, PublishedFileDetails::getFavorited, true);
+        printPairsSorted(wingmanWorkshopMaps, PublishedFileDetails::getFavorited, WingmanFinder::mapToString, true);
 
         System.out.println("\nViews:");
-        printSorted(wingmanWorkshopMaps, PublishedFileDetails::getViews, true);
+        printPairsSorted(wingmanWorkshopMaps, PublishedFileDetails::getViews, WingmanFinder::mapToString, true);
     }
 
-    private static <T extends Comparable<? super T>> void printSorted(List<Pair<MapInfo, PublishedFileDetails>> workshopMaps, Function<PublishedFileDetails, ? extends T> sorter, boolean reversed) {
-        Comparator<Pair<MapInfo, PublishedFileDetails>> c = Comparator.comparing(p -> sorter.apply(p.b()));
+    private static String mapToString(MapInfo m) {
+        return m.getFullName() + (m.isWorkshopMap() ? " - " + m.getWorkshopData().getWorkshopUrl() : "");
+    }
+
+    private static <A, B, C extends Comparable<? super C>> void printPairsSorted(
+            List<? extends Pair<? extends A, ? extends B>> workshopMaps,
+            Function<? super B, ? extends C> sorter,
+            Function<? super A, ? extends String> toString,
+            boolean reversed
+    ) {
+        Comparator<? super Pair<? extends A, ? extends B>> c = Comparator.comparing(p -> sorter.apply(p.b()));
         if (reversed) {
             c = c.reversed();
         }
 
         workshopMaps.stream()
                 .sorted(c)
-                .map(p -> mapToString(p.a()) + " - " + sorter.apply(p.b()))
+                .map(p -> toString.apply(p.a()) + " - " + sorter.apply(p.b()))
                 .forEachOrdered(System.out::println);
-    }
-
-    private static String mapToString(MapInfo m) {
-        return m.getFullName() + (m.isWorkshopMap() ? " - " + m.getWorkshopData().getWorkshopUrl() : "");
     }
 }
