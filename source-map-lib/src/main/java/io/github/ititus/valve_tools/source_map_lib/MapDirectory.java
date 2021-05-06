@@ -1,6 +1,8 @@
 package io.github.ititus.valve_tools.source_map_lib;
 
 import io.github.ititus.data.Lazy;
+import io.github.ititus.io.FileExtensionFilter;
+import io.github.ititus.io.PathFilter;
 import io.github.ititus.valve_tools.steam_api.SteamApp;
 import io.github.ititus.valve_tools.steam_api.SteamInstallation;
 
@@ -15,6 +17,8 @@ import java.util.stream.Stream;
 
 public final class MapDirectory {
 
+    private static final PathFilter FILTER = new FileExtensionFilter("bsp");
+
     private final Path mapDir;
     private final Lazy<List<MapInfo>> maps;
 
@@ -24,7 +28,7 @@ public final class MapDirectory {
             try (Stream<Path> stream = Files.walk(mapDir)) {
                 return stream
                         .filter(Files::isRegularFile)
-                        .filter(p -> p.getFileName().toString().endsWith(".bsp"))
+                        .filter(FILTER)
                         .map(MapInfo::of)
                         .sorted()
                         .collect(Collectors.toList());
