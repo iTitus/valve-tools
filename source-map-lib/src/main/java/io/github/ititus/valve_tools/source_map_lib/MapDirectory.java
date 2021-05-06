@@ -1,5 +1,6 @@
 package io.github.ititus.valve_tools.source_map_lib;
 
+import io.github.ititus.data.Lazy;
 import io.github.ititus.valve_tools.steam_api.SteamApp;
 import io.github.ititus.valve_tools.steam_api.SteamInstallation;
 
@@ -15,10 +16,22 @@ import java.util.stream.Stream;
 public final class MapDirectory {
 
     private final Path mapDir;
-    private List<MapInfo> maps;
+    private final Lazy<List<MapInfo>> maps;
 
     private MapDirectory(Path mapDir) {
         this.mapDir = mapDir;
+        this.maps = Lazy.of(() -> {
+            try (Stream<Path> stream = Files.walk(mapDir)) {
+                return stream
+                        .filter(Files::isRegularFile)
+                        .filter(p -> p.getFileName().toString().endsWith(".bsp"))
+                        .map(MapInfo::of)
+                        .sorted()
+                        .collect(Collectors.toList());
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        });
     }
 
     public static MapDirectory of(Path mapDir) {
@@ -42,20 +55,7 @@ public final class MapDirectory {
     }
 
     public List<MapInfo> findMaps() {
-        if (maps == null) {
-            try (Stream<Path> stream = Files.walk(mapDir)) {
-                maps = stream
-                        .filter(Files::isRegularFile)
-                        .filter(p -> p.getFileName().toString().endsWith(".bsp"))
-                        .map(MapInfo::of)
-                        .sorted()
-                        .collect(Collectors.toList());
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        }
-
-        return maps;
+        return maps.get();
     }
 
     public Path resolve(String path) {
