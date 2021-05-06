@@ -33,7 +33,7 @@ public final class MapDirectory {
         return of(
                 SteamInstallation.find()
                         .getAppDir(SteamApp.COUNTERSTRIKE_GLOBAL_OFFENSIVE)
-                        .resolve(Path.of("csgo", "maps"))
+                        .resolve("csgo/maps")
         );
     }
 
