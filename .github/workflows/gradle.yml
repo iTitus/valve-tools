@@ -47,9 +47,9 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build
 
-      - name: Save Test Reports
-        uses: actions/upload-artifact@v2
-        if: always()
-        with:
-          name: test-reports-${{ matrix.os }}-${{ matrix.java-version }}-${{ matrix.distribution }}
-          path: build/reports
+      #- name: Save Test Reports
+      #  uses: actions/upload-artifact@v2
+      #  if: always()
+      #  with:
+      #    name: test-reports-${{ matrix.os }}-${{ matrix.java-version }}-${{ matrix.distribution }}
+      #    path: build/reports
