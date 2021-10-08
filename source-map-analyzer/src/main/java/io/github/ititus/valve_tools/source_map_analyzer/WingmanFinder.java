@@ -9,10 +9,7 @@ import io.github.ititus.valve_tools.steam_web_api.exception.SteamWebApiException
 import io.github.ititus.valve_tools.steam_web_api.remote_storage.PublishedFileDetails;
 import io.github.ititus.valve_tools.steam_web_api.remote_storage.RemoteStorage;
 
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -21,7 +18,7 @@ public final class WingmanFinder {
     private WingmanFinder() {
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         MapDirectory mapDir = MapDirectory.csgo();
         List<MapInfo> maps = mapDir.findMaps();
         System.out.println("Found " + maps.size() + " maps");
@@ -52,18 +49,36 @@ public final class WingmanFinder {
         sortMaps(allDetails, wingmanCompatibleMaps);
     }
 
-    private static Map<Long, PublishedFileDetails> loadAllDetails(RemoteStorage remoteStorage, List<MapInfo> maps) throws SteamWebApiException {
+    private static Map<Long, PublishedFileDetails> loadAllDetails(RemoteStorage remoteStorage, List<MapInfo> maps) {
         long[] ids = maps.stream()
                 .filter(MapInfo::isWorkshopMap)
                 .map(MapInfo::getWorkshopData)
                 .mapToLong(WorkshopData::getWorkshopId)
                 .toArray();
 
-        List<PublishedFileDetails> details = remoteStorage.getPublishedFileDetails(ids);
+        List<PublishedFileDetails> details;
+        try {
+            details = remoteStorage.getPublishedFileDetails(ids);
+        } catch (SteamWebApiException ignored) {
+            details = new ArrayList<>();
+            for (long id : ids) {
+                try {
+                    details.add(remoteStorage.getPublishedFileDetails(id));
+                } catch (SteamWebApiException e) {
+                    MapInfo map = maps.stream()
+                            .filter(MapInfo::isWorkshopMap)
+                            .filter(m -> m.getWorkshopData().getWorkshopId() == id)
+                            .findAny().orElseThrow();
+                    new RuntimeException("Could not load workshop item " + map.getName() + " (" + map.getWorkshopData().getWorkshopId() + ")", e).printStackTrace();
+                    details.add(null);
+                }
+            }
+        }
 
         Map<Long, PublishedFileDetails> detailMap = new HashMap<>();
-        for (int i = 0; i < ids.length; i++) {
-            detailMap.put(ids[i], details.get(i));
+        int i = 0;
+        for (PublishedFileDetails detail : details) {
+            detailMap.put(ids[i++], detail);
         }
 
         return detailMap;
@@ -73,6 +88,7 @@ public final class WingmanFinder {
         List<Pair<MapInfo, PublishedFileDetails>> wingmanWorkshopMaps = maps.stream()
                 .filter(MapInfo::isWorkshopMap)
                 .map(m -> Pair.of(m, details.get(m.getWorkshopData().getWorkshopId())))
+                .filter(p -> p.a() != null && p.b() != null)
                 .collect(Collectors.toList());
 
         System.out.println("\nTime Created:");

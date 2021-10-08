@@ -5,10 +5,10 @@ import info.ata4.bsplib.BspFileReader;
 import info.ata4.bsplib.app.SourceApp;
 import info.ata4.bsplib.entity.Entity;
 import info.ata4.bsplib.struct.BspData;
+import io.github.ititus.io.PathUtil;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.Iterator;
@@ -37,28 +37,14 @@ public final class MapInfo implements Comparable<MapInfo> {
     }
 
     public static MapInfo of(Path path) {
-        Path real;
-        try {
-            real = Objects.requireNonNull(path).toRealPath();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-
-        if (!Files.isRegularFile(path)) {
-            throw new IllegalArgumentException("given path is not a file");
-        }
-
-        String name = real.getFileName().toString();
-        int lastDot = name.lastIndexOf('.');
-        if (lastDot > 0) {
-            name = name.substring(0, lastDot);
-        }
+        Path real = PathUtil.resolveRealFile(path);
+        String name = PathUtil.getNameWithoutExtension(real);
 
         int count = real.getNameCount();
         if (count >= 3) {
             String parent1 = real.getName(count - 2).toString();
             String parent2 = real.getName(count - 3).toString();
-            if ("workshop".equals(parent2)) {
+            if ("workshop".equals(parent2) && parent1.chars().allMatch(c -> '0' <= c && c <= '9')) {
                 name = "workshop/" + parent1 + "/" + name;
             }
         }
@@ -67,21 +53,7 @@ public final class MapInfo implements Comparable<MapInfo> {
     }
 
     public static MapInfo of(Path path, String name) {
-        Objects.requireNonNull(path);
-        Objects.requireNonNull(name);
-
-        Path real;
-        try {
-            real = path.toRealPath();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-
-        if (!Files.isRegularFile(path)) {
-            throw new IllegalArgumentException("given path is not a file");
-        }
-
-        return new MapInfo(real, name);
+        return new MapInfo(PathUtil.resolveRealFile(path), Objects.requireNonNull(name));
     }
 
     public Path getPath() {
@@ -117,7 +89,7 @@ public final class MapInfo implements Comparable<MapInfo> {
     }
 
     public boolean isWingmanOnlyMap() {
-        return countBombsites() == 1 && hasWingmanBuyzonesForBothTeams();
+        return countBombsites() == 1 && hasWingmanBuyzonesForBothTeams() && !isYpracMap();
     }
 
     public boolean isNormalMapWithWingmanSupport() {
@@ -125,12 +97,11 @@ public final class MapInfo implements Comparable<MapInfo> {
     }
 
     public boolean hasEntityNamedForWingman() {
-        return hasEntity(e -> e.getTargetName() != null
-                && (e.getTargetName().contains("2v2") || e.getTargetName().contains("wingman")));
+        return hasEntity(e -> e.getTargetName() != null && (e.getTargetName().contains("2v2") || e.getTargetName().contains("wingman")));
     }
 
     public boolean isWingmanCompatible() {
-        return hasStandardWingmanActivationScript() || hasEntityNamedForWingman() || isWingmanOnlyMap();
+        return (hasStandardWingmanActivationScript() || hasEntityNamedForWingman() || isWingmanOnlyMap()) && !isYpracMap();
     }
 
     private long countBombsites() {
@@ -146,6 +117,10 @@ public final class MapInfo implements Comparable<MapInfo> {
             String vscripts = e.getValue("vscripts");
             return vscripts != null && vscripts.contains("2v2_enable.nut");
         });
+    }
+
+    private boolean isYpracMap() {
+        return hasEntity(e -> e.getTargetName() != null && e.getTargetName().contains("yprac"));
     }
 
     private boolean hasWingmanBuyzonesT() {

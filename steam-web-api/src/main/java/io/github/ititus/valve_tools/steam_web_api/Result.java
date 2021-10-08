@@ -68,8 +68,7 @@ public enum Result {
     PasswordUnset("Password could not be verified as it's unset server side"),
     ExternalAccountUnlinked("External account (PSN, Facebook...) is not linked to a Steam account"),
     PSNTicketInvalid("PSN ticket was invalid"),
-    ExternalAccountAlreadyLinked("External account (PSN, Facebook...) is already linked to some other account, must " +
-            "explicitly request to replace/delete the link first"),
+    ExternalAccountAlreadyLinked("External account (PSN, Facebook...) is already linked to some other account, must explicitly request to replace/delete the link first"),
     RemoteFileConflict("The sync cannot resume due to a conflict between the local and remote files"),
     IllegalPassword("The requested new password is not legal"),
     SameAsPreviousValue("new value is the same as the old one ( secret question and answer )"),
@@ -94,8 +93,7 @@ public enum Result {
     InvalidCEGSubmission("The set of files submitted to the CEG server are not valid !"),
     RestrictedDevice("The device being used is not allowed to perform this action"),
     RegionLocked("The action could not be complete because it is region restricted"),
-    RateLimitExceeded("Temporary rate limit exceeded, try again later, different from LimitExceeded which may be " +
-            "permanent"),
+    RateLimitExceeded("Temporary rate limit exceeded, try again later, different from LimitExceeded which may be permanent"),
     AccountLoginDeniedNeedTwoFactor("Need two-factor code to login"),
     ItemDeleted("The thing we're trying to access has been deleted"),
     AccountLoginDeniedThrottle("login attempt failed, try to throttle response to possible attacker"),

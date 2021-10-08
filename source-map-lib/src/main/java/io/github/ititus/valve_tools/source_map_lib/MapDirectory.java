@@ -62,7 +62,7 @@ public final class MapDirectory {
         return maps.get();
     }
 
-    public Path resolve(String path) {
-        return mapDir.resolve(path);
+    public MapInfo resolve(String path) {
+        return MapInfo.of(mapDir.resolve(path));
     }
 }
