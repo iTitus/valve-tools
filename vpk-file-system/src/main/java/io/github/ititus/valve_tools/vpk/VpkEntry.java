@@ -1,15 +1,17 @@
 package io.github.ititus.valve_tools.vpk;
 
+import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
+import java.util.Map;
 
-public abstract class VpkEntry implements BasicFileAttributes {
+public abstract class VpkEntry implements BasicFileAttributes, BasicFileAttributeView {
 
     private final VpkDirEntry parent;
     private final String name;
 
-    protected VpkEntry(VpkDirEntry parent, String name) {
+    VpkEntry(VpkDirEntry parent, String name) {
         this.parent = parent;
         this.name = name;
     }
@@ -65,5 +67,25 @@ public abstract class VpkEntry implements BasicFileAttributes {
     @Override
     public Object fileKey() {
         return null;
+    }
+
+    @Override
+    public String name() {
+        return "basic";
+    }
+
+    @Override
+    public BasicFileAttributes readAttributes() {
+        return this;
+    }
+
+    @Override
+    public void setTimes(FileTime lastModifiedTime, FileTime lastAccessTime, FileTime createTime) {
+        throw new UnsupportedOperationException();
+    }
+
+    public Map<String, Object> readAttributes(String attrs) {
+        // TODO: implement
+        throw new UnsupportedOperationException();
     }
 }

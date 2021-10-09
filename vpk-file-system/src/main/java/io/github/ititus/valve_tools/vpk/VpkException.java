@@ -4,19 +4,19 @@ import java.io.IOException;
 
 public class VpkException extends IOException {
 
-    public VpkException() {
+    VpkException() {
         super();
     }
 
-    public VpkException(String message) {
+    VpkException(String message) {
         super(message);
     }
 
-    public VpkException(String message, Throwable cause) {
+    VpkException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public VpkException(Throwable cause) {
+    VpkException(Throwable cause) {
         super(cause);
     }
 }

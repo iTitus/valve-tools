@@ -16,19 +16,28 @@ import java.util.Set;
 class VpkFileSystem extends FileSystem {
 
     private final VpkFileSystemProvider provider;
-    private final Path path;
+    private final Path vpkPath;
     private final VpkPath rootDir;
     private final FileStore fileStore;
     private final VpkFile vpkFile;
 
     private boolean isOpen = true;
 
-    public VpkFileSystem(VpkFileSystemProvider provider, Path path, Map<String, ?> env) throws IOException {
+    VpkFileSystem(VpkFileSystemProvider provider, Path vpkPath, Map<String, ?> env) throws IOException {
         this.provider = provider;
-        this.path = path;
+        this.vpkPath = vpkPath;
         this.rootDir = new VpkPath(this, "/");
         this.fileStore = new VpkFileStore(this);
-        this.vpkFile = VpkFile.load(path);
+        this.vpkFile = VpkFile.load(vpkPath);
+
+        // TODO: implement
+        if (!env.isEmpty()) {
+            throw new UnsupportedOperationException(env.toString());
+        }
+    }
+
+    public Path getVpkPath() {
+        return vpkPath;
     }
 
     public VpkFile getVpkFile() {
@@ -47,7 +56,7 @@ class VpkFileSystem extends FileSystem {
         }
 
         isOpen = false;
-        provider.removeFileSystem(path, this);
+        provider.removeFileSystem(vpkPath, this);
     }
 
     @Override
@@ -138,8 +147,11 @@ class VpkFileSystem extends FileSystem {
     }
 
     public BasicFileAttributeView getFileAttributeView(VpkPath path) {
-        // TODO: implement
-        throw new UnsupportedOperationException();
+        try {
+            return vpkFile.resolve(path.getPath());
+        } catch (IOException ignored) {
+            return null;
+        }
     }
 
     public SeekableByteChannel newByteChannel(VpkPath path) throws IOException {
@@ -249,6 +261,6 @@ class VpkFileSystem extends FileSystem {
 
     @Override
     public String toString() {
-        return path.toString();
+        return vpkPath.toString();
     }
 }

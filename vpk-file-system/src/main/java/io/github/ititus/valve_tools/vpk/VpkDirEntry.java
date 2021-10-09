@@ -3,7 +3,9 @@ package io.github.ititus.valve_tools.vpk;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 public class VpkDirEntry extends VpkEntry {
 
@@ -20,61 +22,6 @@ public class VpkDirEntry extends VpkEntry {
 
     Collection<VpkEntry> getDirectChildren() {
         return children.values();
-    }
-
-    public List<VpkFileEntry> getAllFiles() {
-        List<VpkFileEntry> files = new ArrayList<>();
-
-        Deque<VpkDirEntry> toVisit = new ArrayDeque<>();
-        toVisit.addFirst(this);
-        while (!toVisit.isEmpty()) {
-            VpkDirEntry dir = toVisit.removeFirst();
-            for (VpkEntry child : dir.children.values()) {
-                if (child instanceof VpkDirEntry) {
-                    toVisit.addFirst((VpkDirEntry) child);
-                } else {
-                    files.add((VpkFileEntry) child);
-                }
-            }
-        }
-
-        return files;
-    }
-
-    public List<VpkDirEntry> getAllDirectories() {
-        List<VpkDirEntry> dirs = new ArrayList<>();
-
-        Deque<VpkDirEntry> toVisit = new ArrayDeque<>();
-        toVisit.addFirst(this);
-        while (!toVisit.isEmpty()) {
-            VpkDirEntry dir = toVisit.removeFirst();
-            for (VpkEntry child : dir.children.values()) {
-                if (child instanceof VpkDirEntry) {
-                    toVisit.addFirst((VpkDirEntry) child);
-                    dirs.add((VpkDirEntry) child);
-                }
-            }
-        }
-
-        return dirs;
-    }
-
-    public List<VpkEntry> getAllChildren() {
-        List<VpkEntry> children = new ArrayList<>();
-
-        Deque<VpkDirEntry> toVisit = new ArrayDeque<>();
-        toVisit.addFirst(this);
-        while (!toVisit.isEmpty()) {
-            VpkDirEntry dir = toVisit.removeFirst();
-            for (VpkEntry child : dir.children.values()) {
-                children.add(child);
-                if (child instanceof VpkDirEntry) {
-                    toVisit.addFirst((VpkDirEntry) child);
-                }
-            }
-        }
-
-        return children;
     }
 
     public VpkEntry resolve(String name) throws IOException {
@@ -110,6 +57,8 @@ public class VpkDirEntry extends VpkEntry {
             VpkEntry parent = resolveAndCreateDirs(parentPath, create);
             if (parent instanceof VpkFileEntry) {
                 throw new VpkException("cannot create or read directory because file of the same name already exists");
+            } else if (parent == null) {
+                throw new NoSuchFileException("dir not found");
             }
 
             return ((VpkDirEntry) parent).resolveAndCreateDirs(name.substring(i + 1), create);

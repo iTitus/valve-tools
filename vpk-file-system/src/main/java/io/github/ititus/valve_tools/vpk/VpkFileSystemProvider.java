@@ -229,13 +229,28 @@ public class VpkFileSystemProvider extends FileSystemProvider {
 
     @Override
     public Map<String, Object> readAttributes(Path path, String attributes, LinkOption... options) {
-        // TODO: implement
-        throw new UnsupportedOperationException();
+        String view;
+        String attrs;
+
+        int colonPos = attributes.indexOf(':');
+        if (colonPos == -1) {
+            view = "basic";
+            attrs = attributes;
+        } else {
+            view = attributes.substring(0, colonPos);
+            attrs = attributes.substring(colonPos + 1);
+        }
+
+        if (!"basic".equals(view)) {
+            throw new UnsupportedOperationException("Attribute view " + view + " is not supported");
+        }
+
+        return ((VpkEntry) ((VpkPath) path).getFileSystem().getFileAttributeView((VpkPath) path)).readAttributes(attrs);
     }
 
     @Override
     public void setAttribute(Path path, String attribute, Object value, LinkOption... options) {
-        throw new UnsupportedOperationException();
+        throw new ReadOnlyFileSystemException();
     }
 
     void removeFileSystem(Path path, VpkFileSystem vpkfs) throws IOException {
