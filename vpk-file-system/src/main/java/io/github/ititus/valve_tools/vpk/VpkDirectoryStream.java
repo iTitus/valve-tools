@@ -11,11 +11,13 @@ class VpkDirectoryStream implements DirectoryStream<Path> {
     private final DirectoryStream.Filter<? super Path> filter;
 
     private volatile boolean isClosed;
-    private volatile boolean itr;
+    private volatile boolean itrUsed;
 
     VpkDirectoryStream(VpkPath dir, DirectoryStream.Filter<? super Path> filter) throws IOException {
         this.dir = dir;
         this.filter = filter;
+        this.isClosed = false;
+        this.itrUsed = false;
         if (!Files.isDirectory(dir)) {
             throw new NotDirectoryException(dir.toString());
         }
@@ -25,7 +27,7 @@ class VpkDirectoryStream implements DirectoryStream<Path> {
     public synchronized Iterator<Path> iterator() {
         if (isClosed) {
             throw new ClosedDirectoryStreamException();
-        } else if (itr) {
+        } else if (itrUsed) {
             throw new IllegalStateException("Iterator has already been returned");
         }
 
@@ -46,7 +48,7 @@ class VpkDirectoryStream implements DirectoryStream<Path> {
             throw new DirectoryIteratorException(e);
         }
 
-        itr = true;
+        itrUsed = true;
         return new Iterator<>() {
             @Override
             public boolean hasNext() {

@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 @FunctionalInterface
-public interface DataReader {
+interface DataReader {
 
     private static short bytesToShort(byte b1, byte b2) {
         return (short) (Byte.toUnsignedInt(b1) | (Byte.toUnsignedInt(b2) << 8));

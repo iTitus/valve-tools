@@ -4,7 +4,7 @@ import java.io.IOException;
 
 public class VpkHeader2 {
 
-    public static final int SIZE = 16;
+    static final int SIZE = 16;
 
     private final int fileDataSectionSize;
     private final int archiveMD5SectionSize;

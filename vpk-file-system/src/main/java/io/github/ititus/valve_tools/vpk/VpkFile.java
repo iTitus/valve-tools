@@ -12,7 +12,7 @@ import java.util.Locale;
 
 public class VpkFile {
 
-    public static final int SIGNATURE = 0x55aa1234;
+    static final int SIGNATURE = 0x55aa1234;
 
     private final Path path;
     private final VpkHeader headerV1;

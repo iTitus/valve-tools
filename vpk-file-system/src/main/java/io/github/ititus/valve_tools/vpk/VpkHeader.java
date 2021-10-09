@@ -4,7 +4,7 @@ import java.io.IOException;
 
 public class VpkHeader {
 
-    public static final int SIZE = 12;
+    static final int SIZE = 12;
 
     private final int version;
     private final int treeSize;
