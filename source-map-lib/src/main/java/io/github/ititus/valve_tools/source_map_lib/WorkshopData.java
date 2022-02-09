@@ -1,6 +1,6 @@
 package io.github.ititus.valve_tools.source_map_lib;
 
-import io.github.ititus.data.Lazy;
+import io.github.ititus.commons.data.Lazy;
 
 import java.io.UncheckedIOException;
 import java.net.MalformedURLException;

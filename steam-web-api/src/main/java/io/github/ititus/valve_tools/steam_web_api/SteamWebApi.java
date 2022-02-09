@@ -1,6 +1,6 @@
 package io.github.ititus.valve_tools.steam_web_api;
 
-import io.github.ititus.io.HttpStatus;
+import io.github.ititus.commons.io.HttpStatus;
 import io.github.ititus.valve_tools.steam_web_api.exception.HttpIOException;
 import io.github.ititus.valve_tools.steam_web_api.exception.HttpStatusException;
 import io.github.ititus.valve_tools.steam_web_api.exception.SteamWebApiException;

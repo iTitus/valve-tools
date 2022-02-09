@@ -5,15 +5,12 @@ import info.ata4.bsplib.BspFileReader;
 import info.ata4.bsplib.app.SourceApp;
 import info.ata4.bsplib.entity.Entity;
 import info.ata4.bsplib.struct.BspData;
-import io.github.ititus.io.PathUtil;
+import io.github.ititus.commons.io.PathUtil;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
-import java.util.EnumSet;
-import java.util.Iterator;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 
 public final class MapInfo implements Comparable<MapInfo> {
@@ -24,7 +21,6 @@ public final class MapInfo implements Comparable<MapInfo> {
     private final Set<Lump> loadedLumps;
     private final BspData data;
     private SourceApp app;
-    private Set<String> entityClasses;
 
     private MapInfo(Path path, String name) {
         this.path = path;
@@ -33,7 +29,6 @@ public final class MapInfo implements Comparable<MapInfo> {
         this.loadedLumps = EnumSet.noneOf(Lump.class);
         this.data = new BspData();
         this.app = SourceApp.UNKNOWN;
-        this.entityClasses = null;
     }
 
     public static MapInfo of(Path path) {
@@ -78,10 +73,6 @@ public final class MapInfo implements Comparable<MapInfo> {
 
     public SourceApp getApp() {
         return app;
-    }
-
-    public Set<String> getEntityClasses() {
-        return entityClasses;
     }
 
     public BspData getData() {
@@ -165,8 +156,7 @@ public final class MapInfo implements Comparable<MapInfo> {
     }
 
     public boolean containsEntity(String className) {
-        load(Lump.ENTITIES);
-        return entityClasses.contains(className);
+        return hasEntity(e -> Objects.equals(e.getClassName(), className));
     }
 
     public void unload() {
@@ -175,7 +165,6 @@ public final class MapInfo implements Comparable<MapInfo> {
             l.unload(data);
             if (l == Lump.ENTITIES) {
                 app = SourceApp.UNKNOWN;
-                entityClasses = null;
             }
 
             it.remove();
@@ -187,7 +176,7 @@ public final class MapInfo implements Comparable<MapInfo> {
             return;
         }
 
-        Lump[] lumps = loadedLumps.toArray(Lump[]::new);
+        Set<Lump> lumps = EnumSet.copyOf(loadedLumps);
         unload();
         load(lumps);
     }
@@ -196,14 +185,22 @@ public final class MapInfo implements Comparable<MapInfo> {
         load(Lump.ALL);
     }
 
-    public void load(Lump... additionalModes) {
-        if (additionalModes.length == 0) {
+    public void load(Lump additionalLump) {
+        load(List.of(additionalLump));
+    }
+
+    public void load(Lump... additionalLumps) {
+        load(Arrays.asList(additionalLumps));
+    }
+
+    public void load(Collection<Lump> additionalLumps) {
+        if (additionalLumps.isEmpty()) {
             return;
         }
 
         BspFileReader reader = null;
         try {
-            for (Lump lump : additionalModes) {
+            for (Lump lump : additionalLumps) {
                 if (lump == null || loadedLumps.contains(lump)) {
                     continue;
                 } else if (reader == null) {
@@ -213,7 +210,6 @@ public final class MapInfo implements Comparable<MapInfo> {
                 lump.load(reader);
                 if (lump == Lump.ENTITIES) {
                     app = reader.getBspFile().getSourceApp();
-                    entityClasses = reader.getEntityClassSet();
                 }
 
                 loadedLumps.add(lump);

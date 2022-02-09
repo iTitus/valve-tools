@@ -1,6 +1,6 @@
 package io.github.ititus.valve_tools.steam_web_api.exception;
 
-import io.github.ititus.io.HttpStatus;
+import io.github.ititus.commons.io.HttpStatus;
 
 public class HttpStatusException extends HttpIOException {
 

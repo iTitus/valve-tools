@@ -1,6 +1,6 @@
 package io.github.ititus.valve_tools.vpk;
 
-import io.github.ititus.io.PathUtil;
+import io.github.ititus.commons.io.PathUtil;
 
 import java.io.IOException;
 import java.net.URI;

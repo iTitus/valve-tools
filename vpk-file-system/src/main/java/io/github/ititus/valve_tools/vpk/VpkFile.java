@@ -1,7 +1,7 @@
 package io.github.ititus.valve_tools.vpk;
 
-import io.github.ititus.io.IO;
-import io.github.ititus.io.PathUtil;
+import io.github.ititus.commons.io.IO;
+import io.github.ititus.commons.io.PathUtil;
 
 import java.io.*;
 import java.nio.ByteBuffer;

@@ -1,7 +1,7 @@
 package io.github.ititus.valve_tools.steam_web_api;
 
-import io.github.ititus.io.BodyPublishers;
-import io.github.ititus.io.HttpUtil;
+import io.github.ititus.commons.io.BodyPublishers;
+import io.github.ititus.commons.io.HttpUtil;
 
 import java.net.URI;
 import java.net.http.HttpRequest;

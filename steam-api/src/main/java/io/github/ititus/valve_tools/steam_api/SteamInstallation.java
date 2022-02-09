@@ -1,6 +1,6 @@
 package io.github.ititus.valve_tools.steam_api;
 
-import io.github.ititus.system.OS;
+import io.github.ititus.commons.system.OS;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;

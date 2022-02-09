@@ -1,6 +1,6 @@
 package io.github.ititus.valve_tools.source_map_analyzer;
 
-import io.github.ititus.data.pair.Pair;
+import io.github.ititus.commons.data.pair.Pair;
 import io.github.ititus.valve_tools.source_map_lib.MapDirectory;
 import io.github.ititus.valve_tools.source_map_lib.MapInfo;
 import io.github.ititus.valve_tools.source_map_lib.WorkshopData;

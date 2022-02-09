@@ -1,8 +1,8 @@
 package io.github.ititus.valve_tools.source_map_lib;
 
-import io.github.ititus.data.Lazy;
-import io.github.ititus.io.FileExtensionFilter;
-import io.github.ititus.io.PathFilter;
+import io.github.ititus.commons.data.Lazy;
+import io.github.ititus.commons.io.FileExtensionFilter;
+import io.github.ititus.commons.io.PathFilter;
 import io.github.ititus.valve_tools.steam_api.SteamApp;
 import io.github.ititus.valve_tools.steam_api.SteamInstallation;
 
