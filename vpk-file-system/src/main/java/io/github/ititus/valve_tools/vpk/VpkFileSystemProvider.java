@@ -253,6 +253,7 @@ public class VpkFileSystemProvider extends FileSystemProvider {
         throw new ReadOnlyFileSystemException();
     }
 
+    @SuppressWarnings("removal")
     void removeFileSystem(Path path, VpkFileSystem vpkfs) throws IOException {
         synchronized (filesystems) {
             Path realPath;
