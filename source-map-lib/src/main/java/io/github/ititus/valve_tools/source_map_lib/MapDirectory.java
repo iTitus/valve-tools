@@ -3,6 +3,7 @@ package io.github.ititus.valve_tools.source_map_lib;
 import io.github.ititus.commons.data.Lazy;
 import io.github.ititus.commons.io.FileExtensionFilter;
 import io.github.ititus.commons.io.PathFilter;
+import io.github.ititus.commons.io.PathUtil;
 import io.github.ititus.valve_tools.steam_api.SteamApp;
 import io.github.ititus.valve_tools.steam_api.SteamInstallation;
 
@@ -12,7 +13,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class MapDirectory {
@@ -23,7 +23,7 @@ public final class MapDirectory {
     private final Lazy<List<MapInfo>> maps;
 
     private MapDirectory(Path mapDir) {
-        this.mapDir = mapDir;
+        this.mapDir = PathUtil.resolveRealDir(Objects.requireNonNull(mapDir));
         this.maps = Lazy.of(() -> {
             try (Stream<Path> stream = Files.walk(mapDir)) {
                 return stream
@@ -31,7 +31,7 @@ public final class MapDirectory {
                         .filter(FILTER)
                         .map(MapInfo::of)
                         .sorted()
-                        .collect(Collectors.toList());
+                        .toList();
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
@@ -39,11 +39,7 @@ public final class MapDirectory {
     }
 
     public static MapDirectory of(Path mapDir) {
-        try {
-            return new MapDirectory(Objects.requireNonNull(mapDir).toRealPath());
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        return new MapDirectory(mapDir);
     }
 
     public static MapDirectory csgo() {
