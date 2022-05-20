@@ -9,6 +9,7 @@ import io.github.ititus.valve_tools.steam_web_api.remote_storage.RemoteStorage;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public final class WingmanFinder {
 
@@ -17,7 +18,24 @@ public final class WingmanFinder {
 
     public static void main(String[] args) {
         MapDirectory mapDir = MapDirectory.csgo();
-        List<MapInfo> maps = mapDir.findMaps();
+        List<MapInfo> maps = mapDir.findMaps().stream()
+                .filter(m -> !m.getName().startsWith("aim_"))
+                .filter(m -> !m.getName().startsWith("yprac_"))
+                .filter(m -> !m.getName().startsWith("awp_"))
+                .filter(m -> !m.getName().startsWith("training_"))
+                .filter(m -> !m.getName().startsWith("fps_"))
+                .filter(m -> !m.getName().startsWith("csgohub_"))
+                .filter(m -> !m.getName().startsWith("recoil_"))
+                .filter(m -> !m.getName().startsWith("surf_"))
+                .filter(m -> !m.getName().startsWith("bot_"))
+                .filter(m -> !m.getName().startsWith("duel_"))
+                .filter(m -> !m.getName().startsWith("dz_"))
+                .filter(m -> !m.getName().startsWith("gd_"))
+                .filter(m -> !m.getName().startsWith("ar_"))
+                .filter(m -> !m.getName().startsWith("lobby_"))
+                .filter(m -> !Set.of("testmap", "tmawp", "biocenter2", "1v1v1v1_nuke", "training1").contains(m.getName()))
+                .sorted()
+                .toList();
         System.out.println("Found " + maps.size() + " maps");
 
         RemoteStorage remoteStorage = SteamWebApi.create().remoteStorage();

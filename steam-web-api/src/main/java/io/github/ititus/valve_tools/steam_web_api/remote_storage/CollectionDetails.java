@@ -74,6 +74,11 @@ public class CollectionDetails extends BaseResult {
         @JsonAdapter(EnumByOrdinal.class)
         private final FileType fileType;
 
+        @SuppressWarnings("unused")
+        private Child() {
+            this(0, 0, null);
+        }
+
         public Child(long publishedFileId, int sortOrder, FileType fileType) {
             this.publishedFileId = publishedFileId;
             this.sortOrder = sortOrder;

@@ -35,7 +35,7 @@ public final class Util {
                             .filter(MapInfo::isWorkshopMap)
                             .filter(m -> m.getWorkshopData().getWorkshopId() == id)
                             .findAny().orElseThrow();
-                    new RuntimeException("Could not load workshop item " + map.getName() + " (" + map.getWorkshopData().getWorkshopId() + ")", e).printStackTrace();
+                    new RuntimeException("Could not load workshop item " + map.getFullName() + " (" + map.getWorkshopData().getWorkshopId() + ")", e).printStackTrace();
                     details.add(null);
                 }
             }
@@ -45,6 +45,31 @@ public final class Util {
         int i = 0;
         for (PublishedFileDetails detail : details) {
             detailMap.put(ids[i++], detail);
+        }
+
+        return detailMap;
+    }
+
+    public static Map<Long, PublishedFileDetails> loadAllDetails(RemoteStorage remoteStorage, long... mapIds) {
+        List<PublishedFileDetails> details;
+        try {
+            details = remoteStorage.getPublishedFileDetails(mapIds);
+        } catch (SteamWebApiException ignored) {
+            details = new ArrayList<>();
+            for (long id : mapIds) {
+                try {
+                    details.add(remoteStorage.getPublishedFileDetails(id));
+                } catch (SteamWebApiException e) {
+                    new RuntimeException("Could not load workshop item " + id, e).printStackTrace();
+                    details.add(null);
+                }
+            }
+        }
+
+        Map<Long, PublishedFileDetails> detailMap = new HashMap<>();
+        int i = 0;
+        for (PublishedFileDetails detail : details) {
+            detailMap.put(mapIds[i++], detail);
         }
 
         return detailMap;
@@ -71,14 +96,14 @@ public final class Util {
         printMapsSorted(workshopMaps, sortKeyExtractor, (mi, pfd) -> mapToString(mi) + " - " + pfd.getTitle(), sortKeyToString, reversed);
     }
 
-    public static <C extends Comparable<? super C>> void printMapsSorted(
-            List<Pair<MapInfo, PublishedFileDetails>> workshopMaps,
-            BiFunction<MapInfo, PublishedFileDetails, ? extends C> sortKeyExtractor,
-            BiFunction<? super MapInfo, ? super PublishedFileDetails, ? extends String> mapToString,
+    public static <A, B, C extends Comparable<? super C>> void printMapsSorted(
+            List<Pair<A, B>> workshopMaps,
+            BiFunction<A, B, ? extends C> sortKeyExtractor,
+            BiFunction<? super A, ? super B, ? extends String> mapToString,
             Function<? super C, ? extends String> sortKeyToString,
             boolean reversed
     ) {
-        Comparator<Pair<MapInfo, PublishedFileDetails>> c = Comparator.comparing(p -> sortKeyExtractor.apply(p.a(), p.b()));
+        Comparator<Pair<A, B>> c = Comparator.comparing(p -> sortKeyExtractor.apply(p.a(), p.b()));
         if (reversed) {
             c = c.reversed();
         }

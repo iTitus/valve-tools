@@ -300,5 +300,10 @@ public class PublishedFileDetails extends BaseResult {
         public int hashCode() {
             return tag.hashCode();
         }
+
+        @Override
+        public String toString() {
+            return tag;
+        }
     }
 }
