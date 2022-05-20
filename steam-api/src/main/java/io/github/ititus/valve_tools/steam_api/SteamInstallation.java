@@ -19,10 +19,10 @@ public final class SteamInstallation {
                     () -> Path.of("C:/Program Files/Steam")
             ),
             OS.MAC, List.of(
-                    () -> Path.of("~/Library/Application Support/Steam")
+                    () -> Path.of(System.getProperty("user.home"), "Library/Application Support/Steam")
             ),
             OS.UNIX, List.of(
-                    () -> Path.of("~/.local/share/Steam")
+                    () -> Path.of(System.getProperty("user.home"), ".local/share/Steam")
             )
     );
 
