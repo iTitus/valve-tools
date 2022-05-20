@@ -25,6 +25,9 @@ public final class ListAllMaps {
             throw new RuntimeException("could not load collection details", e);
         }
 
+        System.out.println("Collection has " + result.getChildren().size() + " maps");
+        System.out.println();
+
         Map<Long, PublishedFileDetails> allDetails = Util.loadAllDetails(remoteStorage, result.getChildren().stream().mapToLong(CollectionDetails.Child::getPublishedFileId).toArray());
         AtomicInteger counter = new AtomicInteger();
 
