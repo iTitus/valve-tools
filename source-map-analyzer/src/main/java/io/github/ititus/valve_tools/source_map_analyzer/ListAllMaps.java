@@ -26,7 +26,6 @@ public final class ListAllMaps {
         }
 
         System.out.println("Collection has " + result.getChildren().size() + " maps");
-        System.out.println();
 
         Map<Long, PublishedFileDetails> allDetails = Util.loadAllDetails(remoteStorage, result.getChildren().stream().mapToLong(CollectionDetails.Child::getPublishedFileId).toArray());
         AtomicInteger counter = new AtomicInteger();
@@ -36,6 +35,7 @@ public final class ListAllMaps {
                 .filter(p -> p.a() != null && p.b() != null)
                 .toList();
 
+        System.out.println();
         // Util.printMapsSorted(workshopMapFileDetails, (id, pfd) -> pfd.getTimeUpdated(), (id, pfd) -> counter.getAndIncrement() + ": workshop/" + id + "/" + PathUtil.getNameWithoutExtension(Path.of(pfd.getFileName())) + " - " + pfd.getTitle() + " - " + "https://steamcommunity.com/sharedfiles/filedetails/?id=" + pfd.getPublishedFileId(, t -> DateTimeFormatter.ISO_DATE.format(LocalDate.ofInstant(t, ZoneOffset.UTC)), true);
         Util.printMapsSorted(workshopMapFileDetails, (id, pfd) -> pfd.getSubscriptions(), (id, pfd) -> counter.getAndIncrement() + ": workshop/" + pfd.getPublishedFileId() + "/" + PathUtil.getNameWithoutExtension(Path.of(pfd.getFileName())) + " - " + pfd.getTitle() + " - " + "https://steamcommunity.com/sharedfiles/filedetails/?id=" + pfd.getPublishedFileId() + " - " + pfd.getTags(), Objects::toString, true);
     }
