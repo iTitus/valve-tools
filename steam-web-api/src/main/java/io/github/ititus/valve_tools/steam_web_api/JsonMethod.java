@@ -9,29 +9,34 @@ import java.util.List;
 
 public abstract class JsonMethod<T extends Interface, R> extends Method<T, R> {
 
-    protected static final Gson GSON = new GsonBuilder()
-            .disableHtmlEscaping()
-            .serializeNulls()
-            .create();
+    public static final Gson GSON = new GsonBuilder().create();
 
     protected JsonMethod(T apiInterface, String name, int version, ApiMethod apiMethod) {
         super(apiInterface, name, version, apiMethod, ResponseFormat.JSON);
     }
 
-    protected static <S extends BaseResult> List<S> extractArrayElements(JsonObject json, String arrayKey,
-                                                                         int expectedArrayLength,
-                                                                         Class<S> resultClass) throws SteamWebApiException {
-        JsonObject obj = json.getAsJsonObject().get("response").getAsJsonObject();
-        Result result = GSON.fromJson(obj, BaseResult.class).getResult();
-        int resultCount = obj.get("resultcount").getAsInt();
-        if (result != Result.OK) {
-            throw new ResultException(result);
-        } else if (resultCount != expectedArrayLength) {
-            throw new ResultException("Unexpected number of results");
+    protected static <S extends BaseResult> List<S> extractArrayElements(JsonElement json, String arrayKey, int expectedArrayLength, Class<S> resultClass) throws SteamWebApiException {
+        var response = json.getAsJsonObject().getAsJsonObject("response");
+
+        if (response.has("result")) {
+            Result result = GSON.fromJson(response, BaseResult.class).getResult();
+            if (result != Result.OK) {
+                throw new ResultException(result);
+            }
         }
 
-        JsonArray arr = obj.getAsJsonArray(arrayKey);
-        if (arr.size() != expectedArrayLength) {
+        var resultCount = response.get("resultcount");
+        if (resultCount != null && resultCount.isJsonPrimitive()) {
+            var resultCountAsInt = resultCount.getAsInt();
+            if (resultCountAsInt != expectedArrayLength) {
+                throw new ResultException("Unexpected number of results");
+            }
+        }
+
+        var arr = response.getAsJsonArray(arrayKey);
+        if (arr == null) {
+            throw new ResultException("Missing array");
+        } else if (arr.size() != expectedArrayLength) {
             throw new ResultException("Unexpected array length");
         }
 

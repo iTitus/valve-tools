@@ -9,9 +9,9 @@ import io.github.ititus.valve_tools.steam_web_api.exception.SteamWebApiException
 import java.util.List;
 import java.util.Map;
 
-import static io.github.ititus.valve_tools.steam_web_api.Parameters.writeArray;
+import static io.github.ititus.valve_tools.steam_web_api.Parameters.writeUnsignedArray;
 
-public class GetPublishedFileDetails extends JsonMethod<RemoteStorage, List<PublishedFileDetails>> {
+public final class GetPublishedFileDetails extends JsonMethod<RemoteStorage, List<PublishedFileDetails>> {
 
     private final long[] publishedFileIds;
 
@@ -26,7 +26,7 @@ public class GetPublishedFileDetails extends JsonMethod<RemoteStorage, List<Publ
 
     @Override
     public void populateParams(Map<String, String> params) {
-        writeArray(params, "itemcount", "publishedfileids", publishedFileIds);
+        writeUnsignedArray(params, "itemcount", "publishedfileids", publishedFileIds);
     }
 
     @Override

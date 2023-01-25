@@ -37,7 +37,7 @@ public class Interface {
     ) throws SteamWebApiException {
         Map<String, String> stringParams;
         if (isService()) {
-            stringParams = Map.of("input_json", parameters.toJson().toString());
+            stringParams = Map.of("input_json", JsonMethod.GSON.toJson(parameters.toJson()));
         } else {
             stringParams = parameters.toMap();
         }

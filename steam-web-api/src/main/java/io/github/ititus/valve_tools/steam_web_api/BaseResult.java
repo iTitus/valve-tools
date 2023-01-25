@@ -5,20 +5,11 @@ import io.github.ititus.valve_tools.steam_web_api.json.EnumByOrdinal;
 
 public class BaseResult {
 
-    /**
-     * EResult m_eResult; // The result of the operation.
-     */
     @JsonAdapter(EnumByOrdinal.class)
-    private final Result result;
+    private Result result;
 
     @SuppressWarnings("unused")
-    private BaseResult() {
-        this(Result.None);
-    }
-
-    protected BaseResult(Result result) {
-        this.result = result;
-    }
+    protected BaseResult() {}
 
     public Result getResult() {
         return result;

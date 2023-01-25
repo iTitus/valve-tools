@@ -13,8 +13,7 @@ public abstract class Method<T extends Interface, R> implements Parameters {
     private final ApiMethod apiMethod;
     private final ResponseFormat responseFormat;
 
-    protected Method(T apiInterface, String name, int version, ApiMethod apiMethod,
-                     ResponseFormat responseFormat) {
+    protected Method(T apiInterface, String name, int version, ApiMethod apiMethod, ResponseFormat responseFormat) {
         this.apiInterface = Objects.requireNonNull(apiInterface);
         this.name = Objects.requireNonNull(name);
         this.version = version;

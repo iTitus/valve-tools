@@ -2,7 +2,7 @@ package io.github.ititus.valve_tools.source_map_lib;
 
 import info.ata4.bsplib.BspFile;
 import info.ata4.bsplib.BspFileReader;
-import info.ata4.bsplib.app.SourceApp;
+import info.ata4.bsplib.app.SourceAppId;
 import info.ata4.bsplib.entity.Entity;
 import info.ata4.bsplib.struct.BspData;
 import io.github.ititus.commons.io.PathUtil;
@@ -20,7 +20,7 @@ public final class MapInfo implements Comparable<MapInfo> {
     private final WorkshopData workshopData;
     private final Set<Lump> loadedLumps;
     private final BspData data;
-    private SourceApp app;
+    private int appId;
 
     private MapInfo(Path path, String name) {
         this.path = path;
@@ -28,7 +28,7 @@ public final class MapInfo implements Comparable<MapInfo> {
         this.workshopData = WorkshopData.read(name);
         this.loadedLumps = EnumSet.noneOf(Lump.class);
         this.data = new BspData();
-        this.app = SourceApp.UNKNOWN;
+        this.appId = SourceAppId.UNKNOWN;
     }
 
     public static MapInfo of(Path path) {
@@ -71,8 +71,8 @@ public final class MapInfo implements Comparable<MapInfo> {
         return workshopData;
     }
 
-    public SourceApp getApp() {
-        return app;
+    public int getAppId() {
+        return appId;
     }
 
     public BspData getData() {
@@ -164,7 +164,7 @@ public final class MapInfo implements Comparable<MapInfo> {
             Lump l = it.next();
             l.unload(data);
             if (l == Lump.ENTITIES) {
-                app = SourceApp.UNKNOWN;
+                appId = SourceAppId.UNKNOWN;
             }
 
             it.remove();
@@ -209,7 +209,7 @@ public final class MapInfo implements Comparable<MapInfo> {
 
                 lump.load(reader);
                 if (lump == Lump.ENTITIES) {
-                    app = reader.getBspFile().getSourceApp();
+                    appId = reader.getBspFile().getAppId();
                 }
 
                 loadedLumps.add(lump);

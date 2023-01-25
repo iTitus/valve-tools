@@ -4,6 +4,7 @@ import io.github.ititus.commons.io.HttpStatus;
 import io.github.ititus.valve_tools.steam_web_api.exception.HttpIOException;
 import io.github.ititus.valve_tools.steam_web_api.exception.HttpStatusException;
 import io.github.ititus.valve_tools.steam_web_api.exception.SteamWebApiException;
+import io.github.ititus.valve_tools.steam_web_api.published_file_service.PublishedFileService;
 import io.github.ititus.valve_tools.steam_web_api.remote_storage.RemoteStorage;
 
 import java.io.ByteArrayOutputStream;
@@ -13,7 +14,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -92,10 +93,14 @@ public final class SteamWebApi {
         return new RemoteStorage(this);
     }
 
-    public String request(ApiMethod apiMethod, String url, ResponseFormat responseFormat, Map<String, String> params) throws SteamWebApiException {
-        params = buildParams(responseFormat, params);
+    public PublishedFileService publishedFileService() {
+        return new PublishedFileService(this);
+    }
 
-        HttpRequest request = apiMethod.buildRequest(url, params)
+    public String request(ApiMethod apiMethod, String url, ResponseFormat responseFormat, Map<String, String> params) throws SteamWebApiException {
+        var stringParams = buildParams(responseFormat, params);
+
+        HttpRequest request = apiMethod.buildRequest(url, stringParams)
                 .header("Accept-Encoding", "gzip, deflate")
                 .build();
         HttpResponse<InputStream> response;
@@ -115,20 +120,26 @@ public final class SteamWebApi {
         return body;
     }
 
-    private Map<String, String> buildParams(ResponseFormat responseFormat, Map<String, String> params) {
-        if (params == null) {
-            params = new HashMap<>();
-        }
+    private Map<String, String> buildParams(ResponseFormat responseFormat, Map<String, ?> params) {
+        Map<String, String> stringParams = new LinkedHashMap<>();
 
         if (responseFormat != ResponseFormat.JSON) {
-            params.put("format", responseFormat.getName());
+            stringParams.put("format", responseFormat.getName());
         }
 
         if (apiKey != null) {
-            params.put("key", apiKey);
+            stringParams.put("key", apiKey);
         }
 
-        return params;
+        if (params != null) {
+            params.forEach((key, value) -> {
+                if (value != null) {
+                    stringParams.put(key, value.toString());
+                }
+            });
+        }
+
+        return stringParams;
     }
 
     public static final class Builder {

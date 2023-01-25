@@ -1,170 +1,69 @@
 package io.github.ititus.valve_tools.steam_web_api.remote_storage;
 
+import com.google.gson.*;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
+import com.google.gson.reflect.TypeToken;
 import io.github.ititus.valve_tools.steam_web_api.BaseResult;
-import io.github.ititus.valve_tools.steam_web_api.json.CBoolean;
-import io.github.ititus.valve_tools.steam_web_api.json.EnumByOrdinal;
-import io.github.ititus.valve_tools.steam_web_api.json.UnixTime;
+import io.github.ititus.valve_tools.steam_web_api.common.Visibility;
+import io.github.ititus.valve_tools.steam_web_api.json.*;
 
+import java.lang.reflect.Type;
 import java.time.Instant;
-import java.util.Objects;
-import java.util.Set;
+import java.util.List;
+import java.util.stream.Collectors;
 
-/**
- * struct RemoteStorageGetPublishedFileDetailsResult_t
- */
-public class PublishedFileDetails extends BaseResult {
+public final class PublishedFileDetails extends BaseResult {
 
-/*
-{
-	enum { k_iCallback = k_iClientRemoteStorageCallbacks + 18 };
-	int32 m_nPreviewFileSize;		// Size of the preview file
-	EWorkshopFileType m_eFileType;	// Type of the file
-	bool m_bAcceptedForUse;			// developer has specifically flagged this item as accepted in the Workshop
-};
-*/
-
-    /**
-     * PublishedFileId_t m_nPublishedFileId;
-     */
     @SerializedName("publishedfileid")
-    private final long publishedFileId;
-
-    /**
-     * uint64 m_ulSteamIDOwner; // Steam ID of the user who created this content.
-     */
-    private final long creator;
-
-    /**
-     * AppId_t m_nCreatorAppID; // ID of the app that created this file.
-     */
+    @JsonAdapter(UnsignedLong.class)
+    private long publishedFileId;
+    @JsonAdapter(UnsignedLong.class)
+    private long creator;
     @SerializedName("creator_app_id")
-    private final int creatorAppId;
-
-    /**
-     * AppId_t m_nConsumerAppID; // ID of the app that will consume this file.
-     */
+    @JsonAdapter(UnsignedInt.class)
+    private int creatorAppId;
     @SerializedName("consumer_app_id")
-    private final int consumerAppId;
-
-    /**
-     * char m_pchFileName[k_cchFilenameMax]; // The name of the primary file
-     */
+    @JsonAdapter(UnsignedInt.class)
+    private int consumerAppId;
     @SerializedName("filename")
-    private final String fileName;
-
-    /**
-     * int32 m_nFileSize; // Size of the primary file
-     */
+    private String fileName;
     @SerializedName("file_size")
-    private final int fileSize;
-
-    /**
-     * char m_rgchURL[k_cchPublishedFileURLMax]; // URL (for a video or a website)
-     */
+    private int fileSize;
     @SerializedName("file_url")
-    private final String fileUrl;
-
-    /**
-     * UGCHandle_t m_hFile; // The handle of the primary file
-     */
+    private String fileUrl;
     @SerializedName("hcontent_file")
-    private final long hcontentFile;
-
+    private long fileUGCId;
     @SerializedName("preview_url")
-    private final String previewUrl;
-
-    /**
-     * UGCHandle_t m_hPreviewFile; // The handle of the preview file
-     */
+    private String previewUrl;
     @SerializedName("hcontent_preview")
-    private final long hcontentPreview;
-
-    /**
-     * char m_rgchTitle[k_cchPublishedDocumentTitleMax]; // title of document
-     */
-    private final String title;
-
-    /**
-     * char m_rgchDescription[k_cchPublishedDocumentDescriptionMax]; // description of document
-     */
-    private final String description;
-
-    /**
-     * uint32 m_rtimeCreated; // time when the published file was created
-     */
+    private long previewUGCId;
+    private String title;
+    private String description;
     @SerializedName("time_created")
     @JsonAdapter(UnixTime.Seconds.class)
-    private final Instant timeCreated;
-
-    /**
-     * uint32 m_rtimeUpdated; // time when the published file was last updated
-     */
+    private Instant timeCreated;
     @SerializedName("time_updated")
     @JsonAdapter(UnixTime.Seconds.class)
-    private final Instant timeUpdated;
-
-    /**
-     * ERemoteStoragePublishedFileVisibility m_eVisibility;
-     */
+    private Instant timeUpdated;
     @JsonAdapter(EnumByOrdinal.class)
-    private final Visibility visibility;
-
-    /**
-     * bool m_bBanned;
-     */
+    private Visibility visibility;
     @JsonAdapter(CBoolean.class)
-    private final boolean banned;
-
+    private boolean banned;
     @SerializedName("ban_reason")
-    private final String banReason;
-
-    private final int subscriptions;
-
-    private final int favorited;
-
+    private String banReason;
+    private int subscriptions;
+    private int favorited;
     @SerializedName("lifetime_subscriptions")
-    private final int lifetimeSubscriptions;
-
+    private int lifetimeSubscriptions;
     @SerializedName("lifetime_favorited")
-    private final int lifetimeFavorited;
-
-    private final int views;
-
-    /**
-     * char m_rgchTags[k_cchTagListMax]; // comma separated list of all tags associated with this file <br>
-     * bool m_bTagsTruncated; // whether the list of tags was too long to be returned in the provided buffer
-     */
-    private final Set<Tag> tags;
+    private int lifetimeFavorited;
+    private int views;
+    @JsonAdapter(TagListAdapter.class)
+    private List<String> tags;
 
     @SuppressWarnings("unused")
-    private PublishedFileDetails() {
-        super(null);
-        this.publishedFileId = 0;
-        this.creator = 0;
-        this.creatorAppId = 0;
-        this.consumerAppId = 0;
-        this.fileName = null;
-        this.fileSize = 0;
-        this.fileUrl = null;
-        this.hcontentFile = 0;
-        this.previewUrl = null;
-        this.hcontentPreview = 0;
-        this.title = null;
-        this.description = null;
-        this.timeCreated = null;
-        this.timeUpdated = null;
-        this.visibility = null;
-        this.banned = false;
-        this.banReason = null;
-        this.subscriptions = 0;
-        this.favorited = 0;
-        this.lifetimeSubscriptions = 0;
-        this.lifetimeFavorited = 0;
-        this.views = 0;
-        this.tags = null;
-    }
+    private PublishedFileDetails() {}
 
     public long getPublishedFileId() {
         return publishedFileId;
@@ -194,16 +93,16 @@ public class PublishedFileDetails extends BaseResult {
         return fileUrl;
     }
 
-    public long getHcontentFile() {
-        return hcontentFile;
+    public long getFileUGCId() {
+        return fileUGCId;
     }
 
     public String getPreviewUrl() {
         return previewUrl;
     }
 
-    public long getHcontentPreview() {
-        return hcontentPreview;
+    public long getPreviewUGCId() {
+        return previewUGCId;
     }
 
     public String getTitle() {
@@ -226,7 +125,7 @@ public class PublishedFileDetails extends BaseResult {
         return visibility;
     }
 
-    public boolean getBanned() {
+    public boolean isBanned() {
         return banned;
     }
 
@@ -254,56 +153,42 @@ public class PublishedFileDetails extends BaseResult {
         return views;
     }
 
-    public Set<Tag> getTags() {
+    public List<String> getTags() {
         return tags;
     }
 
-    public enum Visibility {
+    public static final class TagListAdapter implements JsonSerializer<List<String>>, JsonDeserializer<List<String>> {
 
-        Public,
-        FriendsOnly,
-        Private,
-        Unlisted
-
-    }
-
-    public static final class Tag {
-
-        private final String tag;
-
-        @SuppressWarnings("unused")
-        private Tag() {
-            this.tag = null;
-        }
-
-        public Tag(String tag) {
-            this.tag = Objects.requireNonNull(tag);
-        }
-
-        public String getTag() {
-            return tag;
+        @Override
+        public List<String> deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+            return context.<List<Tag>>deserialize(json, new TypeToken<List<Tag>>() {}.getType()).stream()
+                    .map(Tag::getTag)
+                    .collect(Collectors.toList());
         }
 
         @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            } else if (o == null || getClass() != o.getClass()) {
-                return false;
+        public JsonElement serialize(List<String> src, Type typeOfSrc, JsonSerializationContext context) {
+            return context.serialize(
+                    src.stream()
+                            .map(Tag::new)
+                            .toList()
+            );
+        }
+
+        private static final class Tag {
+
+            String tag;
+
+            @SuppressWarnings("unused")
+            Tag() {}
+
+            Tag(String tag) {
+                this.tag = tag;
             }
 
-            Tag tag = (Tag) o;
-            return this.tag.equals(tag.tag);
-        }
-
-        @Override
-        public int hashCode() {
-            return tag.hashCode();
-        }
-
-        @Override
-        public String toString() {
-            return tag;
+            String getTag() {
+                return tag;
+            }
         }
     }
 }

@@ -1,37 +1,54 @@
 package io.github.ititus.valve_tools.steam_web_api;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-
-import static java.lang.String.valueOf;
+import java.util.Objects;
+import java.util.function.Function;
 
 public interface Parameters {
 
-    static void writeArray(Map<String, String> params, String countName, String arrayName, int... arr) {
-        params.put(countName, valueOf(arr.length));
+    static void writeUnsignedArray(Map<String, String> params, String countName, String arrayName, int... arr) {
+        if (countName != null) {
+            params.put(countName, Integer.toUnsignedString(arr.length));
+        }
         for (int i = 0; i < arr.length; i++) {
-            params.put(arrayName + "[" + i + "]", valueOf(arr[i]));
+            params.put(arrayName + "[" + i + "]", Integer.toUnsignedString(arr[i]));
         }
     }
 
-    static void writeArray(Map<String, String> params, String countName, String arrayName, long... arr) {
-        params.put(countName, valueOf(arr.length));
+    static void writeUnsignedArray(Map<String, String> params, String countName, String arrayName, long... arr) {
+        if (countName != null) {
+            params.put(countName, Integer.toUnsignedString(arr.length));
+        }
         for (int i = 0; i < arr.length; i++) {
-            params.put(arrayName + "[" + i + "]", valueOf(arr[i]));
+            params.put(arrayName + "[" + i + "]", Long.toUnsignedString(arr[i]));
         }
     }
 
     static void writeArray(Map<String, String> params, String countName, String arrayName, String... arr) {
-        params.put(countName, valueOf(arr.length));
+        if (countName != null) {
+            params.put(countName, Integer.toUnsignedString(arr.length));
+        }
         for (int i = 0; i < arr.length; i++) {
-            params.put(arrayName + "[" + i + "]", valueOf(arr[i]));
+            params.put(arrayName + "[" + i + "]", Objects.requireNonNull(arr[i]));
         }
     }
 
-    default JsonObject toJson() {
-        JsonObject json = new JsonObject();
+    static <T> void writeOptional(Map<String, String> params, String key, T value) {
+        writeOptional(params, key, value, Object::toString);
+    }
+
+    static <T> void writeOptional(Map<String, String> params, String key, T value, Function<? super T, ? extends String> toString) {
+        if (key != null && value != null) {
+            params.put(key, toString.apply(value));
+        }
+    }
+
+    default JsonElement toJson() {
+        var json = new JsonObject();
         populateJson(json);
         return json;
     }

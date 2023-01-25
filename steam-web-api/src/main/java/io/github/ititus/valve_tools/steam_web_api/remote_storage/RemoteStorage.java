@@ -6,7 +6,7 @@ import io.github.ititus.valve_tools.steam_web_api.exception.SteamWebApiException
 
 import java.util.List;
 
-public class RemoteStorage extends Interface {
+public final class RemoteStorage extends Interface {
 
     public RemoteStorage(SteamWebApi api) {
         super("ISteamRemoteStorage", api);
@@ -26,5 +26,13 @@ public class RemoteStorage extends Interface {
 
     public List<PublishedFileDetails> getPublishedFileDetails(long... publishedFileIds) throws SteamWebApiException {
         return new GetPublishedFileDetails(this, publishedFileIds).request();
+    }
+
+    public UGCFileDetails getUGCFileDetails(long ugcid, int appid) throws SteamWebApiException {
+        return new GetUGCFileDetails(this, null, ugcid, appid).request();
+    }
+
+    public UGCFileDetails getUGCFileDetails(long steamId, long ugcid, int appid) throws SteamWebApiException {
+        return new GetUGCFileDetails(this, steamId, ugcid, appid).request();
     }
 }
