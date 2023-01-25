@@ -4,7 +4,7 @@ import com.google.gson.*;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
-import io.github.ititus.valve_tools.steam_web_api.BaseResult;
+import io.github.ititus.valve_tools.steam_web_api.common.BaseResult;
 import io.github.ititus.valve_tools.steam_web_api.common.Visibility;
 import io.github.ititus.valve_tools.steam_web_api.json.*;
 

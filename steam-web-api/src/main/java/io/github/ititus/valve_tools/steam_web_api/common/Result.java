@@ -1,19 +1,14 @@
-package io.github.ititus.valve_tools.steam_web_api;
-
+package io.github.ititus.valve_tools.steam_web_api.common;
 
 import java.util.Objects;
 
-/**
- * enum EResult
- */
 public enum Result {
 
     None("no result"),
     OK("success"),
     Fail("generic failure"),
     NoConnection("no/failed network connection"),
-    @Deprecated
-    NoConnectionRetry(null),
+    @Deprecated NoConnectionRetry(null),
     InvalidPassword("password/ticket is invalid"),
     LoggedInElsewhere("same user logged in elsewhere"),
     InvalidProtocolVer("protocol version is incorrect"),
@@ -128,7 +123,15 @@ public enum Result {
     CommunityCooldown("access is denied because of a community cooldown (probably from support profile data resets)"),
     NoLauncherSpecified("No launcher was specified, but a launcher was needed to choose correct realm for operation."),
     MustAgreeToSSA("User must agree to china SSA or global SSA before login"),
-    LauncherMigrated("The specified launcher type is no longer supported; the user should be directed elsewhere");
+    LauncherMigrated("The specified launcher type is no longer supported; the user should be directed elsewhere"),
+    SteamRealmMismatch("The user's realm does not match the realm of the requested resource"),
+    InvalidSignature("signature check did not match"),
+    ParseFailure("Failed to parse input"),
+    NoVerifiedPhone("account does not have a verified phone number"),
+    InsufficientBattery("user device doesn't have enough battery charge currently to complete the action"),
+    ChargerRequired("The operation requires a charger to be plugged in, which wasn't present"),
+    CachedCredentialInvalid("Cached credential was invalid - user must reauthenticate"),
+    PhoneNumberIsVOIP("The phone number provided is a Voice Over IP number");
 
     private final String description;
 

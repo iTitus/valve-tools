@@ -1,6 +1,8 @@
 package io.github.ititus.valve_tools.steam_web_api;
 
 import com.google.gson.*;
+import io.github.ititus.valve_tools.steam_web_api.common.BaseResult;
+import io.github.ititus.valve_tools.steam_web_api.common.Result;
 import io.github.ititus.valve_tools.steam_web_api.exception.ResultException;
 import io.github.ititus.valve_tools.steam_web_api.exception.SteamWebApiException;
 

@@ -1,6 +1,6 @@
 package io.github.ititus.valve_tools.steam_web_api.exception;
 
-import io.github.ititus.valve_tools.steam_web_api.Result;
+import io.github.ititus.valve_tools.steam_web_api.common.Result;
 
 public class ResultException extends SteamWebApiException {
 

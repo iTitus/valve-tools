@@ -3,7 +3,7 @@ package io.github.ititus.valve_tools.steam_web_api.remote_storage;
 import com.google.gson.JsonObject;
 import io.github.ititus.valve_tools.steam_web_api.ApiMethod;
 import io.github.ititus.valve_tools.steam_web_api.JsonMethod;
-import io.github.ititus.valve_tools.steam_web_api.Result;
+import io.github.ititus.valve_tools.steam_web_api.common.Result;
 import io.github.ititus.valve_tools.steam_web_api.exception.ResultException;
 import io.github.ititus.valve_tools.steam_web_api.exception.SteamWebApiException;
 

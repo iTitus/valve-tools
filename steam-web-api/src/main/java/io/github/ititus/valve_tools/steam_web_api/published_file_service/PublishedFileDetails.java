@@ -2,7 +2,7 @@ package io.github.ititus.valve_tools.steam_web_api.published_file_service;
 
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
-import io.github.ititus.valve_tools.steam_web_api.BaseResult;
+import io.github.ititus.valve_tools.steam_web_api.common.BaseResult;
 import io.github.ititus.valve_tools.steam_web_api.common.Child;
 import io.github.ititus.valve_tools.steam_web_api.common.FileType;
 import io.github.ititus.valve_tools.steam_web_api.common.Visibility;
