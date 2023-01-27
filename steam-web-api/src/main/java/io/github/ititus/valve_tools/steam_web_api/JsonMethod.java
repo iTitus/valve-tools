@@ -58,6 +58,10 @@ public abstract class JsonMethod<T extends Interface, R> extends Method<T, R> {
 
     @Override
     protected R parse(String data) throws SteamWebApiException {
+        if (getFormat() != ResponseFormat.JSON) {
+            throw new SteamWebApiException(new UnsupportedOperationException("only JSON responses supported"));
+        }
+
         return parseJson(JsonParser.parseString(data).getAsJsonObject());
     }
 
