@@ -12,9 +12,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileAttributeView;
 import java.nio.file.spi.FileSystemProvider;
-import java.security.AccessController;
-import java.security.PrivilegedActionException;
-import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -86,10 +83,10 @@ public class VpkFileSystemProvider extends FileSystemProvider {
                 }
             }
 
-            VpkFileSystem zipfs = createVpkFileSystem(path, env);
-            filesystems.put(path, zipfs);
+            VpkFileSystem vpkfs = createVpkFileSystem(path, env);
+            filesystems.put(path, vpkfs);
 
-            return zipfs;
+            return vpkfs;
         }
     }
 
@@ -123,7 +120,7 @@ public class VpkFileSystemProvider extends FileSystemProvider {
             throw new ProviderMismatchException();
         }
 
-        return ((VpkPath) path).getFileSystem().newByteChannel((VpkPath) path);
+        return ((VpkPath) path).getFileSystem().newByteChannel((VpkPath) path, options, attrs);
     }
 
     @Override
@@ -137,12 +134,12 @@ public class VpkFileSystemProvider extends FileSystemProvider {
 
     @Override
     public void createDirectory(Path dir, FileAttribute<?>... attrs) {
-        throw new UnsupportedOperationException();
+        throw new ReadOnlyFileSystemException();
     }
 
     @Override
     public void delete(Path path) {
-        throw new UnsupportedOperationException();
+        throw new ReadOnlyFileSystemException();
     }
 
     @Override
@@ -152,7 +149,7 @@ public class VpkFileSystemProvider extends FileSystemProvider {
 
     @Override
     public void move(Path source, Path target, CopyOption... options) {
-        throw new UnsupportedOperationException();
+        throw new ReadOnlyFileSystemException();
     }
 
     @Override
@@ -212,7 +209,7 @@ public class VpkFileSystemProvider extends FileSystemProvider {
             return (V) ((VpkPath) path).getFileSystem().getFileAttributeView((VpkPath) path);
         }
 
-        throw new UnsupportedOperationException("Attribute view of type " + type.getName() + " not supported");
+        return null;
     }
 
     @Override
@@ -256,14 +253,7 @@ public class VpkFileSystemProvider extends FileSystemProvider {
     @SuppressWarnings("removal")
     void removeFileSystem(Path path, VpkFileSystem vpkfs) throws IOException {
         synchronized (filesystems) {
-            Path realPath;
-            PrivilegedExceptionAction<Path> action = path::toRealPath;
-            try {
-                realPath = AccessController.doPrivileged(action);
-            } catch (PrivilegedActionException e) {
-                throw (IOException) e.getException();
-            }
-
+            Path realPath = path.toRealPath();
             if (filesystems.get(realPath) == vpkfs) {
                 filesystems.remove(realPath);
             }

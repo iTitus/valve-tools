@@ -3,9 +3,10 @@ package io.github.ititus.valve_tools.vpk;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-public class VpkFileEntry extends VpkEntry {
+public final class VpkFileEntry extends VpkEntry {
 
     private static final short TERMINATOR = -1;
+    private static final short EXTERNAL_ARCHIVE_MARKER = Short.MAX_VALUE;
 
     private final int crc;
     private final short preloadBytes;
@@ -37,10 +38,15 @@ public class VpkFileEntry extends VpkEntry {
         }
 
         ByteBuffer preload;
-        if (preloadBytes > 0) {
-            preload = ByteBuffer.allocate(preloadBytes);
-            r.read(preload, preloadBytes);
-            preload = preload.asReadOnlyBuffer();
+        var preloadBytesUnsigned = Short.toUnsignedInt(preloadBytes);
+        if (preloadBytesUnsigned > 0) {
+            preload = ByteBuffer.allocate(preloadBytesUnsigned);
+            r.read(preload, preloadBytesUnsigned);
+            if (preload.hasRemaining()) {
+                throw new VpkException("could not read full preload data");
+            }
+
+            preload.flip();
         } else {
             preload = null;
         }
@@ -60,31 +66,31 @@ public class VpkFileEntry extends VpkEntry {
 
     @Override
     public long size() {
-        return preloadBytes + entryLength;
+        return Short.toUnsignedLong(preloadBytes) + Integer.toUnsignedLong(entryLength);
     }
 
     public int getCrc() {
         return crc;
     }
 
-    public short getPreloadBytes() {
-        return preloadBytes;
+    public int getPreloadBytes() {
+        return Short.toUnsignedInt(preloadBytes);
     }
 
     public short getArchiveIndex() {
         return archiveIndex;
     }
 
-    public boolean hasArchiveIndex() {
-        return archiveIndex != Short.MAX_VALUE;
+    public boolean hasExternalArchiveIndex() {
+        return archiveIndex != EXTERNAL_ARCHIVE_MARKER;
     }
 
-    public int getEntryOffset() {
-        return entryOffset;
+    public long getEntryOffset() {
+        return Integer.toUnsignedLong(entryOffset);
     }
 
-    public int getEntryLength() {
-        return entryLength;
+    public long getEntryLength() {
+        return Integer.toUnsignedLong(entryLength);
     }
 
     public ByteBuffer getPreload() {

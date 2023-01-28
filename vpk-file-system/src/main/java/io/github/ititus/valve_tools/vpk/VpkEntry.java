@@ -5,13 +5,21 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import java.util.Map;
+import java.util.Objects;
 
-public abstract class VpkEntry implements BasicFileAttributes, BasicFileAttributeView {
+public abstract sealed class VpkEntry implements BasicFileAttributes, BasicFileAttributeView permits VpkDirEntry, VpkFileEntry {
 
     private final VpkDirEntry parent;
     private final String name;
 
     VpkEntry(VpkDirEntry parent, String name) {
+        Objects.requireNonNull(name, "name");
+        if (name.indexOf('\u0000') >= 0 || name.indexOf('/') >= 0) {
+            throw new IllegalArgumentException();
+        } else if (name.isEmpty() && parent != null) {
+            throw new IllegalArgumentException();
+        }
+
         this.parent = parent;
         this.name = name;
     }
@@ -29,11 +37,7 @@ public abstract class VpkEntry implements BasicFileAttributes, BasicFileAttribut
         if (parent == null) {
             path = getName();
         } else {
-            path = parent.getPath() + getName();
-        }
-
-        if (isDirectory()) {
-            path += "/";
+            path = parent.getPath() + '/' + getName();
         }
 
         return path;
@@ -87,5 +91,10 @@ public abstract class VpkEntry implements BasicFileAttributes, BasicFileAttribut
     public Map<String, Object> readAttributes(String attrs) {
         // TODO: implement
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String toString() {
+        return getPath();
     }
 }

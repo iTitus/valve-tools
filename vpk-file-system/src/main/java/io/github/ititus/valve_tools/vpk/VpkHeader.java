@@ -29,7 +29,7 @@ public class VpkHeader {
         return version;
     }
 
-    public int getTreeSize() {
-        return treeSize;
+    public long getTreeSize() {
+        return Integer.toUnsignedLong(treeSize);
     }
 }

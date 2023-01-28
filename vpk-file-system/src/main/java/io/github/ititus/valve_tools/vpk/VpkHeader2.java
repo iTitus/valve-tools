@@ -27,19 +27,19 @@ public class VpkHeader2 {
         );
     }
 
-    public int getFileDataSectionSize() {
-        return fileDataSectionSize;
+    public long getFileDataSectionSize() {
+        return Integer.toUnsignedLong(fileDataSectionSize);
     }
 
-    public int getArchiveMD5SectionSize() {
-        return archiveMD5SectionSize;
+    public long getArchiveMD5SectionSize() {
+        return Integer.toUnsignedLong(archiveMD5SectionSize);
     }
 
-    public int getOtherMD5SectionSize() {
-        return otherMD5SectionSize;
+    public long getOtherMD5SectionSize() {
+        return Integer.toUnsignedLong(otherMD5SectionSize);
     }
 
-    public int getSignatureSectionSize() {
-        return signatureSectionSize;
+    public long getSignatureSectionSize() {
+        return Integer.toUnsignedLong(signatureSectionSize);
     }
 }

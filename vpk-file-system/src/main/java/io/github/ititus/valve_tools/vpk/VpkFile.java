@@ -1,6 +1,5 @@
 package io.github.ititus.valve_tools.vpk;
 
-import io.github.ititus.commons.io.IO;
 import io.github.ititus.commons.io.PathUtil;
 
 import java.io.*;
@@ -8,11 +7,13 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Locale;
 
 public class VpkFile {
 
     static final int SIGNATURE = 0x55aa1234;
+    private static final int MAP_THRESHOLD = 8192;
 
     private final Path path;
     private final VpkHeader headerV1;
@@ -35,6 +36,7 @@ public class VpkFile {
 
     private static VpkFile load(Path path, InputStream is) throws IOException {
         return load(path, new DataReader() {
+
             @Override
             public byte readByte() throws IOException {
                 int n = is.read();
@@ -65,6 +67,7 @@ public class VpkFile {
 
     private static VpkFile load(Path path, DataInput di) throws IOException {
         return load(path, new DataReader() {
+
             @Override
             public byte readByte() throws IOException {
                 return di.readByte();
@@ -101,11 +104,10 @@ public class VpkFile {
     private static VpkDirEntry readTree(DataReader r) throws IOException {
         VpkDirEntry rootEntry = new VpkDirEntry(null, "");
 
-        String extension, path, name;
-        while (!(extension = r.readString()).isEmpty()) {
-            while (!(path = r.readString()).isEmpty()) {
-                VpkDirEntry dirEntry = " ".equals(path) ? rootEntry : (VpkDirEntry) rootEntry.resolveAndCreateDirs(path);
-                while (!(name = r.readString()).isEmpty()) {
+        for (String extension; !(extension = r.readString()).isEmpty(); ) {
+            for (String path; !(path = r.readString()).isEmpty(); ) {
+                VpkDirEntry dirEntry = " ".equals(path) ? rootEntry : rootEntry.resolveOrCreateDirs(path);
+                for (String name; !(name = r.readString()).isEmpty(); ) {
                     String fullName = name + (" ".equals(extension) ? "" : "." + extension);
                     dirEntry.addChild(VpkFileEntry.load(dirEntry, fullName, r));
                 }
@@ -123,33 +125,50 @@ public class VpkFile {
         return rootEntry.resolve(path);
     }
 
+    public VpkEntry resolveFile(String path) throws IOException {
+        return rootEntry.resolveFile(path);
+    }
+
     ByteBuffer loadContent(VpkFileEntry file) throws IOException {
-        int length = file.getEntryLength();
+        var length = file.getEntryLength();
         if (length == 0) {
             return null;
         }
 
-        int offset;
+        long offset;
         Path path;
-        if (file.hasArchiveIndex()) {
+        if (file.hasExternalArchiveIndex()) {
             String name = PathUtil.getNameWithoutExtension(this.path);
             if (!name.endsWith("_dir")) {
-                throw new VpkException();
+                throw new VpkException("cannot resolve archive file if main file (" + this.path + ") is not named with suffix '_dir'");
             }
 
             offset = file.getEntryOffset();
-            path = this.path.resolveSibling(name.substring(0, name.length() - 3) + String.format(Locale.ROOT, "%03d", file.getArchiveIndex()) + "." + PathUtil.getExtension(this.path).orElseThrow());
+            var archiveIndex = file.getArchiveIndex();
+            if (archiveIndex < 0 || archiveIndex >= 1000) {
+                throw new VpkException("cannot get file with archive index " + archiveIndex);
+            }
+
+            path = this.path.resolveSibling(name.substring(0, name.length() - 3) + String.format(Locale.ROOT, "%03d", archiveIndex) + "." + PathUtil.getExtension(this.path).orElseThrow());
         } else {
-            offset = VpkHeader.SIZE + headerV1.getTreeSize() + (headerV2 != null ? VpkHeader2.SIZE : 0) + file.getEntryOffset();
+            offset = VpkHeader.SIZE + (headerV2 != null ? VpkHeader2.SIZE : 0) + headerV1.getTreeSize() + file.getEntryOffset();
             path = this.path;
         }
 
-        ByteBuffer bb = ByteBuffer.allocate(length);
-        try (FileChannel ch = IO.openReadFileChannel(path)) {
-            ch.position(offset);
-            ch.read(bb);
-        }
+        try (FileChannel ch = FileChannel.open(path, StandardOpenOption.READ)) {
+            var size = ch.size();
+            if (size < offset || (size - offset) < length) {
+                throw new VpkException("not enough bytes in file to read full data");
+            }
 
-        return bb.asReadOnlyBuffer();
+            if (length < MAP_THRESHOLD) {
+                var bb = ByteBuffer.allocate((int) length);
+                ch.read(bb, offset);
+                bb.flip();
+                return bb;
+            }
+
+            return ch.map(FileChannel.MapMode.READ_ONLY, offset, length);
+        }
     }
 }

@@ -1,16 +1,20 @@
 package io.github.ititus.valve_tools.vpk;
 
+import io.github.ititus.valve_tools.vpk.internal.ByteBufferChannel;
+import io.github.ititus.valve_tools.vpk.internal.EmptyChannel;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.UserPrincipalLookupService;
 import java.nio.file.spi.FileSystemProvider;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 class VpkFileSystem extends FileSystem {
@@ -154,109 +158,41 @@ class VpkFileSystem extends FileSystem {
         }
     }
 
-    public SeekableByteChannel newByteChannel(VpkPath path) throws IOException {
+    public SeekableByteChannel newByteChannel(VpkPath path, Set<? extends OpenOption> options, FileAttribute<?>... attrs) throws IOException {
+        Objects.requireNonNull(attrs, "attrs");
+        Objects.requireNonNull(options, "options");
+        for (OpenOption option : options) {
+            Objects.requireNonNull(option);
+            if (!(option instanceof StandardOpenOption)) {
+                throw new IllegalArgumentException("option class: " + option.getClass());
+            }
+        }
+
+        if (options.contains(StandardOpenOption.WRITE) || options.contains(StandardOpenOption.APPEND)) {
+            throw new ReadOnlyFileSystemException();
+        }
+
         if (!Files.isRegularFile(path)) {
             throw new NoSuchFileException(path.getPath());
         }
 
-        VpkFileEntry file = (VpkFileEntry) vpkFile.resolve(path.getPath());
+        VpkFileEntry file = (VpkFileEntry) vpkFile.resolveFile(path.getPath());
 
-        ByteBuffer preload = file.getPreload();
-        if (preload != null) {
-            preload.rewind();
+        var preload = file.getPreload();
+        var content = vpkFile.loadContent(file);
+        if (content == null && preload == null) {
+            return new EmptyChannel();
+        } else if (content == null) {
+            return new ByteBufferChannel(preload);
+        } else if (preload == null) {
+            return new ByteBufferChannel(content);
         }
 
-        ByteBuffer content = vpkFile.loadContent(file);
-        if (content != null) {
-            content.rewind();
-        }
-
-        ByteBuffer allContent = ByteBuffer.allocate((preload != null ? preload.remaining() : 0) + (content != null ? content.remaining() : 0));
-        if (preload != null) {
-            allContent.put(preload);
-        }
-        if (content != null) {
-            allContent.put(content);
-        }
+        var allContent = ByteBuffer.allocateDirect(Math.toIntExact(file.size()));
+        allContent.put(preload);
+        allContent.put(content);
         allContent.rewind();
-
-        return new SeekableByteChannel() {
-
-            private boolean isOpen = true;
-
-            @Override
-            public int read(ByteBuffer dst) throws IOException {
-                if (!isOpen) {
-                    throw new ClosedChannelException();
-                } else if (!allContent.hasRemaining()) {
-                    return -1;
-                }
-
-                int numBytes = Math.min(allContent.remaining(), dst.remaining());
-                if (numBytes > 0) {
-                    int oldLimit = allContent.limit();
-                    allContent.limit(allContent.position() + numBytes);
-                    dst.put(allContent);
-                    allContent.limit(oldLimit);
-                }
-
-                return numBytes;
-            }
-
-            @Override
-            public int write(ByteBuffer src) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public long position() throws IOException {
-                if (!isOpen) {
-                    throw new ClosedChannelException();
-                }
-
-                return allContent.position();
-            }
-
-            @Override
-            public SeekableByteChannel position(long newPosition) throws IOException {
-                if (!isOpen) {
-                    throw new ClosedChannelException();
-                }
-
-                allContent.position((int) newPosition);
-                return this;
-            }
-
-            @Override
-            public long size() throws IOException {
-                if (!isOpen) {
-                    throw new ClosedChannelException();
-                }
-
-                return allContent.limit();
-            }
-
-            @Override
-            public SeekableByteChannel truncate(long size) throws IOException {
-                if (!isOpen) {
-                    throw new ClosedChannelException();
-                } else if (size < allContent.limit()) {
-                    allContent.limit((int) size);
-                }
-
-                return this;
-            }
-
-            @Override
-            public boolean isOpen() {
-                return isOpen;
-            }
-
-            @Override
-            public void close() {
-                isOpen = false;
-            }
-        };
+        return new ByteBufferChannel(allContent);
     }
 
     @Override
