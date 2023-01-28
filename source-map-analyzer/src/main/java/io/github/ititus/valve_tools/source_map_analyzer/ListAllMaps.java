@@ -15,7 +15,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-@CommandLine.Command(name = "collection")
+@CommandLine.Command(name = "collection", mixinStandardHelpOptions = true)
 public final class ListAllMaps implements Callable<Integer> {
 
     @CommandLine.Option(names = "--key")

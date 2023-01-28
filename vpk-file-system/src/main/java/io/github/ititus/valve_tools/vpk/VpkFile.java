@@ -121,6 +121,18 @@ public class VpkFile {
         return path;
     }
 
+    public VpkHeader getHeaderV1() {
+        return headerV1;
+    }
+
+    public VpkHeader2 getHeaderV2() {
+        return headerV2;
+    }
+
+    public VpkDirEntry getRootEntry() {
+        return rootEntry;
+    }
+
     public VpkEntry resolve(String path) throws IOException {
         return rootEntry.resolve(path);
     }

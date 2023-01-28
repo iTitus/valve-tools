@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-@CommandLine.Command(name = "wingman")
+@CommandLine.Command(name = "wingman", mixinStandardHelpOptions = true)
 public final class WingmanFinder implements Callable<Integer> {
 
     private WingmanFinder() {

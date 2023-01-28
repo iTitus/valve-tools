@@ -3,7 +3,8 @@ package io.github.ititus.valve_tools.source_map_analyzer;
 import picocli.CommandLine;
 
 @CommandLine.Command(
-        subcommands = {CommandLine.HelpCommand.class, ListAllMaps.class, WingmanFinder.class, Vpk.class}
+        subcommands = {CommandLine.HelpCommand.class, ListAllMaps.class, WingmanFinder.class, Vpk.class},
+        mixinStandardHelpOptions = true
 )
 public final class CLI {
 
