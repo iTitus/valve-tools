@@ -6,7 +6,6 @@ import picocli.CommandLine;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.*;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Set;
@@ -16,21 +15,6 @@ import java.util.stream.IntStream;
 @SuppressWarnings("unused")
 @CommandLine.Command(name = "vpk", mixinStandardHelpOptions = true, subcommands = CommandLine.HelpCommand.class)
 class Vpk {
-
-    private static final Comparator<Path> COMPONENT_COMPARATOR = (p1, p2) -> {
-        int c1 = p1.getNameCount();
-        int c2 = p2.getNameCount();
-        int minC = Math.min(c1, c2);
-
-        for (int i = 0; i < minC; i++) {
-            int c = p1.getName(i).toString().compareTo(p2.getName(i).toString());
-            if (c != 0) {
-                return c;
-            }
-        }
-
-        return Integer.compare(c1, c2);
-    };
 
     private Vpk() {
     }
@@ -82,18 +66,6 @@ class Vpk {
             @CommandLine.Option(names = {"-o", "--out"}, defaultValue = ".", paramLabel = "<output dir>") Path outDir,
             @CommandLine.Parameters(index = "0", paramLabel = "<file to extract>") Path fileToExtract
     ) throws Exception {
-        /*var steamDir = SteamInstallation.find().getSteamDir().toRealPath();
-        try (var s = Files.walk(steamDir)) {
-            var vpks = s
-                    .filter(Files::isRegularFile)
-                    .filter(p -> PathUtil.getExtension(p).map("vpk"::equalsIgnoreCase).orElse(false))
-                    .map(PathUtil::resolveRealFile)
-                    .sorted(COMPONENT_COMPARATOR)
-                    .toList();
-            vpks.forEach(System.out::println);
-        }
-        System.exit(0);*/
-
         System.out.println("extracting '" + fileToExtract + "' to '" + outDir + "'");
         try (var fs = FileSystems.newFileSystem(fileToExtract)) {
             var resolvedOutDir = PathUtil.createOrResolveRealDir(outDir);
