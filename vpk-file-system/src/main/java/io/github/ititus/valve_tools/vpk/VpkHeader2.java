@@ -20,6 +20,7 @@ public class VpkHeader2 {
 
     static VpkHeader2 load(DataReader r) throws IOException {
         int fileDataSectionSize = r.readUInt();
+
         int archiveMD5SectionSize = r.readUInt();
         if (Integer.remainderUnsigned(archiveMD5SectionSize, VpkArchiveMd5Entry.SIZE) != 0) {
             throw new VpkException("wrong size of archiveMd5Section");
@@ -31,9 +32,6 @@ public class VpkHeader2 {
         }
 
         int signatureSectionSize = r.readUInt();
-        if (signatureSectionSize != 0 && signatureSectionSize != VpkSignatureSection.SIZE) {
-            throw new VpkException("wrong size of signatureSection");
-        }
 
         return new VpkHeader2(fileDataSectionSize, archiveMD5SectionSize, otherMD5SectionSize, signatureSectionSize);
     }

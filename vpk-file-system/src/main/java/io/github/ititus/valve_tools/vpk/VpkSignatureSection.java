@@ -5,8 +5,6 @@ import java.nio.ByteBuffer;
 
 public class VpkSignatureSection {
 
-    static final int SIZE = 296;
-
     private final int publicKeySize;
     private final ByteBuffer publicKey;
     private final int signatureSize;
@@ -21,15 +19,9 @@ public class VpkSignatureSection {
 
     static VpkSignatureSection load(DataReader r) throws IOException {
         var publicKeySize = r.readUInt();
-        if (publicKeySize != 160) {
-            throw new VpkException("unexpected publicKeySize");
-        }
         var publicKey = r.readByteBuffer(publicKeySize).asReadOnlyBuffer();
 
         var signatureSize = r.readUInt();
-        if (signatureSize != 128) {
-            throw new VpkException("unexpected signatureSize");
-        }
         var signature = r.readByteBuffer(signatureSize).asReadOnlyBuffer();
 
         return new VpkSignatureSection(publicKeySize, publicKey, signatureSize, signature);
