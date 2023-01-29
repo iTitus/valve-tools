@@ -40,13 +40,7 @@ public final class VpkFileEntry extends VpkEntry {
         ByteBuffer preload;
         var preloadBytesUnsigned = Short.toUnsignedInt(preloadBytes);
         if (preloadBytesUnsigned > 0) {
-            preload = ByteBuffer.allocate(preloadBytesUnsigned);
-            r.read(preload, preloadBytesUnsigned);
-            if (preload.hasRemaining()) {
-                throw new VpkException("could not read full preload data");
-            }
-
-            preload.flip();
+            preload = r.readByteBuffer(preloadBytesUnsigned).asReadOnlyBuffer();
         } else {
             preload = null;
         }

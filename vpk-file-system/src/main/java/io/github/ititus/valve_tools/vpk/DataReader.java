@@ -2,8 +2,8 @@ package io.github.ititus.valve_tools.vpk;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
-@FunctionalInterface
 interface DataReader {
 
     private static short bytesToShort(byte b1, byte b2) {
@@ -34,9 +34,25 @@ interface DataReader {
         return sb.toString();
     }
 
-    default void read(ByteBuffer target, int size) throws IOException {
-        for (int i = 0; i < size; i++) {
+    default byte[] readByteArray(int size) throws IOException {
+        byte[] arr = new byte[size];
+        read(ByteBuffer.wrap(arr), size);
+        return arr;
+    }
+
+    default ByteBuffer readByteBuffer(int size) throws IOException {
+        ByteBuffer buf = ByteBuffer.allocate(size).order(ByteOrder.LITTLE_ENDIAN);
+        read(buf, size);
+        buf.flip();
+        return buf;
+    }
+
+    default void read(ByteBuffer target, long size) throws IOException {
+        for (long i = 0; i < size; i++) {
             target.put(readByte());
         }
     }
+
+    void skip(long n) throws IOException;
+
 }

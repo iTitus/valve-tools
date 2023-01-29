@@ -19,12 +19,23 @@ public class VpkHeader2 {
     }
 
     static VpkHeader2 load(DataReader r) throws IOException {
-        return new VpkHeader2(
-                r.readUInt(),
-                r.readUInt(),
-                r.readUInt(),
-                r.readUInt()
-        );
+        int fileDataSectionSize = r.readUInt();
+        int archiveMD5SectionSize = r.readUInt();
+        if (Integer.remainderUnsigned(archiveMD5SectionSize, VpkArchiveMd5Entry.SIZE) != 0) {
+            throw new VpkException("wrong size of archiveMd5Section");
+        }
+
+        int otherMD5SectionSize = r.readUInt();
+        if (otherMD5SectionSize != VpkOtherMd5Section.SIZE) {
+            throw new VpkException("wrong size of otherMD5Section");
+        }
+
+        int signatureSectionSize = r.readUInt();
+        if (signatureSectionSize != 0 && signatureSectionSize != VpkSignatureSection.SIZE) {
+            throw new VpkException("wrong size of signatureSection");
+        }
+
+        return new VpkHeader2(fileDataSectionSize, archiveMD5SectionSize, otherMD5SectionSize, signatureSectionSize);
     }
 
     public long getFileDataSectionSize() {
@@ -33,6 +44,10 @@ public class VpkHeader2 {
 
     public long getArchiveMD5SectionSize() {
         return Integer.toUnsignedLong(archiveMD5SectionSize);
+    }
+
+    public int getArchiveMD5SectionSizeInt() {
+        return archiveMD5SectionSize;
     }
 
     public long getOtherMD5SectionSize() {

@@ -87,6 +87,7 @@ class Vpk {
                                 .map(Vpk::sanitize)
                                 .collect(Collectors.joining("/"));
                         var resultPath = resolvedOutDir.resolve(sanitized).toAbsolutePath().normalize();
+                        System.out.println(p + " -> " + resultPath);
                         if (Files.isDirectory(p)) {
                             PathUtil.createOrResolveRealDir(resultPath);
                         } else if (Files.isRegularFile(p)) {

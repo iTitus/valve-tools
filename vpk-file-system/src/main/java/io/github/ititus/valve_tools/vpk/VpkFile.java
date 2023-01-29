@@ -8,6 +8,8 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 public class VpkFile {
@@ -19,12 +21,18 @@ public class VpkFile {
     private final VpkHeader headerV1;
     private final VpkHeader2 headerV2;
     private final VpkDirEntry rootEntry;
+    private final List<VpkArchiveMd5Entry> archiveMd5Entries;
+    private final VpkOtherMd5Section otherMd5Section;
+    private final VpkSignatureSection signatureSection;
 
-    private VpkFile(Path path, VpkHeader headerV1, VpkHeader2 headerV2, VpkDirEntry rootEntry) {
+    private VpkFile(Path path, VpkHeader headerV1, VpkHeader2 headerV2, VpkDirEntry rootEntry, List<VpkArchiveMd5Entry> archiveMd5Entries, VpkOtherMd5Section otherMd5Section, VpkSignatureSection signatureSection) {
         this.path = path;
         this.headerV1 = headerV1;
         this.headerV2 = headerV2;
         this.rootEntry = rootEntry;
+        this.archiveMd5Entries = archiveMd5Entries;
+        this.otherMd5Section = otherMd5Section;
+        this.signatureSection = signatureSection;
     }
 
     public static VpkFile load(Path path) throws IOException {
@@ -48,19 +56,29 @@ public class VpkFile {
             }
 
             @Override
-            public void read(ByteBuffer target, int size) throws IOException {
+            public void read(ByteBuffer target, long size) throws IOException {
+                var sizeInt = Math.toIntExact(size);
                 if (target.hasArray()) {
-                    if (is.readNBytes(target.array(), target.arrayOffset() + target.position(), size) != size) {
+                    if (is.readNBytes(target.array(), target.arrayOffset() + target.position(), sizeInt) != sizeInt) {
                         throw new EOFException();
                     }
-                    target.position(target.position() + size);
+                    target.position(target.position() + sizeInt);
                 } else {
-                    byte[] arr = new byte[size];
-                    if (is.readNBytes(arr, 0, size) != size) {
+                    byte[] arr = new byte[sizeInt];
+                    if (is.readNBytes(arr, 0, sizeInt) != sizeInt) {
                         throw new EOFException();
                     }
-                    target.put(arr, 0, size);
+                    target.put(arr, 0, sizeInt);
                 }
+            }
+
+            @Override
+            public void skip(long n) throws IOException {
+                if (n < 0) {
+                    throw new IllegalArgumentException();
+                }
+
+                is.skipNBytes(n);
             }
         });
     }
@@ -74,14 +92,35 @@ public class VpkFile {
             }
 
             @Override
-            public void read(ByteBuffer target, int size) throws IOException {
+            public void read(ByteBuffer target, long size) throws IOException {
+                var sizeInt = Math.toIntExact(size);
                 if (target.hasArray()) {
-                    di.readFully(target.array(), target.arrayOffset() + target.position(), size);
-                    target.position(target.position() + size);
+                    di.readFully(target.array(), target.arrayOffset() + target.position(), sizeInt);
+                    target.position(target.position() + sizeInt);
                 } else {
-                    byte[] arr = new byte[size];
-                    di.readFully(arr, 0, size);
-                    target.put(arr, 0, size);
+                    byte[] arr = new byte[sizeInt];
+                    di.readFully(arr, 0, sizeInt);
+                    target.put(arr, 0, sizeInt);
+                }
+            }
+
+            @Override
+            public void skip(long n) throws IOException {
+                if (n < 0) {
+                    throw new IllegalArgumentException();
+                }
+
+                var intN = Math.toIntExact(n);
+                while (intN > 0) {
+                    var ns = di.skipBytes(intN);
+                    if (ns > 0 && ns <= intN) {
+                        intN -= ns;
+                    } else if (ns == 0) {
+                        readByte();
+                        intN--;
+                    } else {
+                        throw new IOException("unable to skip exactly");
+                    }
                 }
             }
         });
@@ -98,7 +137,28 @@ public class VpkFile {
 
         VpkDirEntry rootEntry = readTree(r);
 
-        return new VpkFile(path, headerV1, headerV2, rootEntry);
+        List<VpkArchiveMd5Entry> archiveMd5Entries = null;
+        VpkOtherMd5Section otherMd5Section = null;
+        VpkSignatureSection signatureSection = null;
+        if (headerV2 != null) {
+            // assume that the actual directory index has the same size as advertised
+            r.skip(headerV2.getFileDataSectionSize());
+
+            int archiveMd5SectionSize = headerV2.getArchiveMD5SectionSizeInt();
+            int count = Integer.divideUnsigned(archiveMd5SectionSize, VpkArchiveMd5Entry.SIZE);
+            archiveMd5Entries = new ArrayList<>(count);
+            for (int i = 0; Integer.compareUnsigned(i, count) < 0; i++) {
+                archiveMd5Entries.add(VpkArchiveMd5Entry.load(r));
+            }
+
+            otherMd5Section = VpkOtherMd5Section.load(r);
+
+            if (headerV2.getSignatureSectionSize() != 0) {
+                signatureSection = VpkSignatureSection.load(r);
+            }
+        }
+
+        return new VpkFile(path, headerV1, headerV2, rootEntry, archiveMd5Entries != null ? List.copyOf(archiveMd5Entries) : null, otherMd5Section, signatureSection);
     }
 
     private static VpkDirEntry readTree(DataReader r) throws IOException {
@@ -133,6 +193,18 @@ public class VpkFile {
         return rootEntry;
     }
 
+    public List<VpkArchiveMd5Entry> getArchiveMd5Entries() {
+        return archiveMd5Entries;
+    }
+
+    public VpkOtherMd5Section getOtherMd5Section() {
+        return otherMd5Section;
+    }
+
+    public VpkSignatureSection getSignatureSection() {
+        return signatureSection;
+    }
+
     public VpkEntry resolve(String path) throws IOException {
         return rootEntry.resolve(path);
     }
@@ -152,7 +224,7 @@ public class VpkFile {
         if (file.hasExternalArchiveIndex()) {
             String name = PathUtil.getNameWithoutExtension(this.path);
             if (!name.endsWith("_dir")) {
-                throw new VpkException("cannot resolve archive file if main file (" + this.path + ") is not named with suffix '_dir'");
+                throw new VpkException("cannot resolve external archive file if main file (" + this.path + ") is not named with suffix '_dir'");
             }
 
             offset = file.getEntryOffset();
