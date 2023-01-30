@@ -9,10 +9,11 @@ application {
 }
 
 dependencies {
-    implementation project(':steam-api')
-    implementation project(':vpk-file-system')
-    implementation project(':steam-web-api')
+    implementation project(':kv-parser')
     implementation project(':source-map-lib')
+    implementation project(':steam-api')
+    implementation project(':steam-web-api')
+    implementation project(':vpk-file-system')
 
     implementation 'info.picocli:picocli:4.7.0'
 }

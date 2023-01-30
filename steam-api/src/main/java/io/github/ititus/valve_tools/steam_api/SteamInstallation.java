@@ -1,6 +1,8 @@
 package io.github.ititus.valve_tools.steam_api;
 
+import io.github.ititus.commons.io.PathUtil;
 import io.github.ititus.commons.system.OS;
+import io.github.ititus.valve_tools.steam_api.internal.WinRegistry;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -9,20 +11,21 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Supplier;
+import java.util.concurrent.Callable;
 
 public final class SteamInstallation {
 
-    private static final Map<OS, List<Supplier<Path>>> PATH_CANDIDATES = Map.of(
+    private static final Map<OS, List<Callable<Path>>> PATH_CANDIDATES = Map.of(
             OS.WINDOWS, List.of(
-                    () -> Path.of("C:/Program Files (x86)/Steam"),
-                    () -> Path.of("C:/Program Files/Steam")
+                    () -> Path.of(WinRegistry.getValue("HKEY_LOCAL_MACHINE\\SOFTWARE\\Wow6432Node\\Valve\\Steam", "InstallPath")),
+                    () -> Path.of(WinRegistry.getValue("HKEY_LOCAL_MACHINE\\SOFTWARE\\Valve\\Steam", "InstallPath"))
             ),
             OS.MAC, List.of(
                     () -> Path.of(System.getProperty("user.home"), "Library/Application Support/Steam")
             ),
             OS.UNIX, List.of(
-                    () -> Path.of(System.getProperty("user.home"), ".local/share/Steam")
+                    () -> Path.of(System.getProperty("user.home"), ".var/app/com.valvesoftware.Steam"),
+                    () -> Path.of(System.getProperty("user.home"), ".steam/steam")
             )
     );
 
@@ -30,15 +33,13 @@ public final class SteamInstallation {
 
     private SteamInstallation(Path steamDir) {
         this.steamDir = steamDir;
+        // TODO: find libraries from vdf file
     }
 
-    private static Optional<SteamInstallation> testCandidates(List<Supplier<Path>> candidates) {
-        for (Supplier<Path> candidate : candidates) {
+    private static Optional<SteamInstallation> testCandidates(List<Callable<Path>> candidates) {
+        for (var candidate : candidates) {
             try {
-                Path p = candidate.get();
-                if (Files.isDirectory(p)) {
-                    return Optional.of(new SteamInstallation(p.toRealPath()));
-                }
+                return Optional.of(new SteamInstallation(PathUtil.resolveRealDir(candidate.call())));
             } catch (Exception ignored) {
             }
         }
@@ -47,7 +48,7 @@ public final class SteamInstallation {
     }
 
     public static SteamInstallation find() {
-        List<Supplier<Path>> candidates = PATH_CANDIDATES.get(OS.current());
+        var candidates = PATH_CANDIDATES.get(OS.current());
         if (candidates == null || candidates.isEmpty()) {
             throw new RuntimeException("No known candidate directories for steam installation on this OS");
         }

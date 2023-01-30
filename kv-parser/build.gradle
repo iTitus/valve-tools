@@ -1,0 +1,3 @@
+plugins {
+    id 'valve-tools.java-library-conventions'
+}
