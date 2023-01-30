@@ -4,7 +4,6 @@ import io.github.ititus.commons.data.Lazy;
 import io.github.ititus.commons.io.FileExtensionFilter;
 import io.github.ititus.commons.io.PathFilter;
 import io.github.ititus.commons.io.PathUtil;
-import io.github.ititus.valve_tools.steam_api.SteamApp;
 import io.github.ititus.valve_tools.steam_api.SteamInstallation;
 
 import java.io.IOException;
@@ -45,7 +44,8 @@ public final class MapDirectory {
     public static MapDirectory csgo() {
         return of(
                 SteamInstallation.find()
-                        .getAppDir(SteamApp.COUNTERSTRIKE_GLOBAL_OFFENSIVE)
+                        .getInstallationDir(730)
+                        .orElseThrow()
                         .resolve("csgo/maps")
         );
     }

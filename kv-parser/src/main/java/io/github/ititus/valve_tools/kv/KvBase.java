@@ -1,4 +1,12 @@
 package io.github.ititus.valve_tools.kv;
 
-public sealed class KvBase permits KvPrimitive, KeyValues {
+public abstract sealed class KvBase permits KvPrimitive, KeyValues {
+
+    public KeyValues asKeyValues() {
+        throw new UnsupportedOperationException();
+    }
+
+    public KvPrimitive asPrimitive() {
+        throw new UnsupportedOperationException();
+    }
 }

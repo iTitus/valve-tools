@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public final class KeyValues extends KvBase {
 
@@ -66,7 +67,7 @@ public final class KeyValues extends KvBase {
         if (next.token() == KvSymbol.L_BRACE) {
             value = parseTextSimple(lexer, false);
         } else if (next.type() instanceof QuotedToken) {
-            value = new KvPrimitive(next.token());
+            value = new KvPrimitive((String) next.token());
         } else {
             throw new KvException("unexpected token");
         }
@@ -78,9 +79,18 @@ public final class KeyValues extends KvBase {
         return children;
     }
 
+    public Optional<KvBase> getChild(String name) {
+        return Optional.ofNullable(children.get(name));
+    }
+
     @Override
     public String toString() {
         return "KeyValues" + children;
+    }
+
+    @Override
+    public KeyValues asKeyValues() {
+        return this;
     }
 
     public record Settings(boolean allowEscapes, boolean allowConditionals, boolean allowMacros) {

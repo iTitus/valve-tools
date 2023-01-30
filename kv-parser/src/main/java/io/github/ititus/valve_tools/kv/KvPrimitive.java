@@ -4,10 +4,10 @@ import java.util.Objects;
 
 public final class KvPrimitive extends KvBase {
 
-    private final Object value;
+    private final String value;
 
-    KvPrimitive(Object value) {
-        this.value = value;
+    KvPrimitive(String value) {
+        this.value = Objects.requireNonNull(value);
     }
 
     public Object getValue() {
@@ -15,7 +15,20 @@ public final class KvPrimitive extends KvBase {
     }
 
     @Override
+    public KvPrimitive asPrimitive() {
+        return this;
+    }
+
+    public String asString() {
+        return value;
+    }
+
+    public int asUInt() {
+        return Integer.parseUnsignedInt(value);
+    }
+
+    @Override
     public String toString() {
-        return Objects.toString(value);
+        return value;
     }
 }
