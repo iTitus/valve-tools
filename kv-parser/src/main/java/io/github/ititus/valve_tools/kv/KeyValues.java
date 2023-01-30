@@ -60,7 +60,6 @@ public final class KeyValues extends KvBase {
         }
 
         var key = (String) next.token();
-        System.out.println(key);
 
         next = lexer.next();
         KvBase value;
