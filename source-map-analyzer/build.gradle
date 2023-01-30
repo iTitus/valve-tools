@@ -14,7 +14,7 @@ dependencies {
     implementation project(':steam-web-api')
     implementation project(':source-map-lib')
 
-    implementation 'info.picocli:picocli:4.7.0'
+    implementation 'info.picocli:picocli:4.7.1'
 }
 
 jlink {
