@@ -116,20 +116,20 @@ public class VpkFileSystemProvider extends FileSystemProvider {
 
     @Override
     public SeekableByteChannel newByteChannel(Path path, Set<? extends OpenOption> options, FileAttribute<?>... attrs) throws IOException {
-        if (!(path instanceof VpkPath)) {
+        if (!(path instanceof VpkPath p)) {
             throw new ProviderMismatchException();
         }
 
-        return ((VpkPath) path).getFileSystem().newByteChannel((VpkPath) path, options, attrs);
+        return p.getFileSystem().newByteChannel(p, options, attrs);
     }
 
     @Override
     public DirectoryStream<Path> newDirectoryStream(Path dir, DirectoryStream.Filter<? super Path> filter) throws IOException {
-        if (!(dir instanceof VpkPath)) {
+        if (!(dir instanceof VpkPath p)) {
             throw new ProviderMismatchException();
         }
 
-        return new VpkDirectoryStream((VpkPath) dir, filter);
+        return new VpkDirectoryStream(p, filter);
     }
 
     @Override
@@ -164,16 +164,16 @@ public class VpkFileSystemProvider extends FileSystemProvider {
 
     @Override
     public FileStore getFileStore(Path path) {
-        if (!(path instanceof VpkPath)) {
+        if (!(path instanceof VpkPath p)) {
             throw new ProviderMismatchException();
         }
 
-        return ((VpkPath) path).getFileSystem().getFileStore();
+        return p.getFileSystem().getFileStore();
     }
 
     @Override
     public void checkAccess(Path path, AccessMode... modes) throws IOException {
-        if (!(path instanceof VpkPath)) {
+        if (!(path instanceof VpkPath p)) {
             throw new ProviderMismatchException();
         }
 
@@ -194,7 +194,7 @@ public class VpkFileSystemProvider extends FileSystemProvider {
             }
         }
 
-        ((VpkPath) path).getFileSystem().exists((VpkPath) path);
+        p.getFileSystem().exists(p);
         if ((w && path.getFileSystem().isReadOnly()) || x) {
             throw new AccessDeniedException(toString());
         }
@@ -203,10 +203,10 @@ public class VpkFileSystemProvider extends FileSystemProvider {
     @Override
     @SuppressWarnings("unchecked")
     public <V extends FileAttributeView> V getFileAttributeView(Path path, Class<V> type, LinkOption... options) {
-        if (!(path instanceof VpkPath)) {
+        if (!(path instanceof VpkPath p)) {
             throw new ProviderMismatchException();
         } else if (type == BasicFileAttributeView.class) {
-            return (V) ((VpkPath) path).getFileSystem().getFileAttributeView((VpkPath) path);
+            return (V) p.getFileSystem().getBasicFileAttributeView(p);
         }
 
         return null;
@@ -215,20 +215,23 @@ public class VpkFileSystemProvider extends FileSystemProvider {
     @Override
     @SuppressWarnings("unchecked")
     public <A extends BasicFileAttributes> A readAttributes(Path path, Class<A> type, LinkOption... options) throws IOException {
-        if (!(path instanceof VpkPath)) {
+        if (!(path instanceof VpkPath p)) {
             throw new ProviderMismatchException();
         } else if (type == BasicFileAttributes.class) {
-            return (A) ((VpkPath) path).getFileSystem().readAttributes((VpkPath) path);
+            return (A) p.getFileSystem().readBasicAttributes(p);
         }
 
         throw new UnsupportedOperationException("Attributes of type " + type.getName() + " not supported");
     }
 
     @Override
-    public Map<String, Object> readAttributes(Path path, String attributes, LinkOption... options) {
+    public Map<String, Object> readAttributes(Path path, String attributes, LinkOption... options) throws IOException {
+        if (!(path instanceof VpkPath p)) {
+            throw new ProviderMismatchException();
+        }
+
         String view;
         String attrs;
-
         int colonPos = attributes.indexOf(':');
         if (colonPos == -1) {
             view = "basic";
@@ -242,7 +245,7 @@ public class VpkFileSystemProvider extends FileSystemProvider {
             throw new UnsupportedOperationException("Attribute view " + view + " is not supported");
         }
 
-        return ((VpkEntry) ((VpkPath) path).getFileSystem().getFileAttributeView((VpkPath) path)).readAttributes(attrs);
+        return p.getFileSystem().readBasicAttributesAsMap(p, attrs);
     }
 
     @Override
@@ -250,13 +253,9 @@ public class VpkFileSystemProvider extends FileSystemProvider {
         throw new ReadOnlyFileSystemException();
     }
 
-    @SuppressWarnings("removal")
-    void removeFileSystem(Path path, VpkFileSystem vpkfs) throws IOException {
+    void removeFileSystem(Path path, VpkFileSystem fs) throws IOException {
         synchronized (filesystems) {
-            Path realPath = path.toRealPath();
-            if (filesystems.get(realPath) == vpkfs) {
-                filesystems.remove(realPath);
-            }
+            filesystems.remove(path.toRealPath(), fs);
         }
     }
 }

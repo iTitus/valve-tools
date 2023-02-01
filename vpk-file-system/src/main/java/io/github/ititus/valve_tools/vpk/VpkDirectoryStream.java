@@ -33,7 +33,7 @@ class VpkDirectoryStream implements DirectoryStream<Path> {
 
         Iterator<? extends Path> iterator;
         try {
-            VpkDirEntry dirEntry = (VpkDirEntry) dir.getFileSystem().getVpkFile().resolve(dir.getPath());
+            VpkDirEntry dirEntry = dir.getFileSystem().getVpkFile().resolveDir(dir.getPath());
             iterator = dirEntry.getDirectChildren().stream()
                     .map(e -> new VpkPath(dir.getFileSystem(), e.getPath()))
                     .filter(e -> {

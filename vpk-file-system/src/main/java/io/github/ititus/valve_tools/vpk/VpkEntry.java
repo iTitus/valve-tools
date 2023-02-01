@@ -9,10 +9,12 @@ import java.util.Objects;
 
 public abstract sealed class VpkEntry implements BasicFileAttributes, BasicFileAttributeView permits VpkDirEntry, VpkFileEntry {
 
+    private final VpkFile file;
     private final VpkDirEntry parent;
     private final String name;
 
-    VpkEntry(VpkDirEntry parent, String name) {
+    VpkEntry(VpkFile file, VpkDirEntry parent, String name) {
+        Objects.requireNonNull(file, "file");
         Objects.requireNonNull(name, "name");
         if (name.indexOf('\u0000') >= 0 || name.indexOf('/') >= 0) {
             throw new IllegalArgumentException();
@@ -20,8 +22,13 @@ public abstract sealed class VpkEntry implements BasicFileAttributes, BasicFileA
             throw new IllegalArgumentException();
         }
 
+        this.file = file;
         this.parent = parent;
         this.name = name;
+    }
+
+    public VpkFile getFile() {
+        return file;
     }
 
     public VpkDirEntry getParent() {

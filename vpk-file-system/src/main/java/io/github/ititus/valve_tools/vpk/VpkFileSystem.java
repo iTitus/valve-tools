@@ -1,10 +1,6 @@
 package io.github.ititus.valve_tools.vpk;
 
-import io.github.ititus.valve_tools.vpk.internal.ByteBufferChannel;
-import io.github.ititus.valve_tools.vpk.internal.EmptyChannel;
-
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributeView;
@@ -14,7 +10,6 @@ import java.nio.file.attribute.UserPrincipalLookupService;
 import java.nio.file.spi.FileSystemProvider;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 class VpkFileSystem extends FileSystem {
@@ -137,20 +132,20 @@ class VpkFileSystem extends FileSystem {
         throw new UnsupportedOperationException();
     }
 
-    public boolean exists(VpkPath path) {
+    boolean exists(VpkPath path) {
         try {
-            readAttributes(path);
+            readBasicAttributes(path);
             return true;
         } catch (IOException ignored) {
             return false;
         }
     }
 
-    public BasicFileAttributes readAttributes(VpkPath path) throws IOException {
-        return vpkFile.resolve(path.getPath());
+    BasicFileAttributes readBasicAttributes(VpkPath path) throws IOException {
+        return getBasicFileAttributeView(path).readAttributes();
     }
 
-    public BasicFileAttributeView getFileAttributeView(VpkPath path) {
+    BasicFileAttributeView getBasicFileAttributeView(VpkPath path) {
         try {
             return vpkFile.resolve(path.getPath());
         } catch (IOException ignored) {
@@ -158,41 +153,12 @@ class VpkFileSystem extends FileSystem {
         }
     }
 
-    public SeekableByteChannel newByteChannel(VpkPath path, Set<? extends OpenOption> options, FileAttribute<?>... attrs) throws IOException {
-        Objects.requireNonNull(attrs, "attrs");
-        Objects.requireNonNull(options, "options");
-        for (OpenOption option : options) {
-            Objects.requireNonNull(option);
-            if (!(option instanceof StandardOpenOption)) {
-                throw new IllegalArgumentException("option class: " + option.getClass());
-            }
-        }
+    Map<String, Object> readBasicAttributesAsMap(VpkPath path, String attrs) throws IOException {
+        return vpkFile.resolve(path.getPath()).readAttributes(attrs);
+    }
 
-        if (options.contains(StandardOpenOption.WRITE) || options.contains(StandardOpenOption.APPEND)) {
-            throw new ReadOnlyFileSystemException();
-        }
-
-        if (!Files.isRegularFile(path)) {
-            throw new NoSuchFileException(path.getPath());
-        }
-
-        VpkFileEntry file = (VpkFileEntry) vpkFile.resolveFile(path.getPath());
-
-        var preload = file.getPreload();
-        var content = vpkFile.loadContent(file);
-        if (content == null && preload == null) {
-            return new EmptyChannel();
-        } else if (content == null) {
-            return new ByteBufferChannel(preload);
-        } else if (preload == null) {
-            return new ByteBufferChannel(content);
-        }
-
-        var allContent = ByteBuffer.allocateDirect(Math.toIntExact(file.size()));
-        allContent.put(preload);
-        allContent.put(content);
-        allContent.rewind();
-        return new ByteBufferChannel(allContent);
+    SeekableByteChannel newByteChannel(VpkPath path, Set<? extends OpenOption> options, FileAttribute<?>... attrs) throws IOException {
+        return vpkFile.resolveFile(path.getPath()).newByteChannel(options, attrs);
     }
 
     @Override

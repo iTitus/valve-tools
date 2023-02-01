@@ -1,6 +1,7 @@
 package io.github.ititus.valve_tools.vpk;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 public class VpkHeader2 {
 
@@ -18,20 +19,20 @@ public class VpkHeader2 {
         this.signatureSectionSize = signatureSectionSize;
     }
 
-    static VpkHeader2 load(DataReader r) throws IOException {
-        int fileDataSectionSize = r.readUInt();
+    static VpkHeader2 load(ByteBuffer bb) throws IOException {
+        int fileDataSectionSize = bb.getInt();
 
-        int archiveMD5SectionSize = r.readUInt();
+        int archiveMD5SectionSize = bb.getInt();
         if (Integer.remainderUnsigned(archiveMD5SectionSize, VpkArchiveMd5Entry.SIZE) != 0) {
             throw new VpkException("wrong size of archiveMd5Section");
         }
 
-        int otherMD5SectionSize = r.readUInt();
+        int otherMD5SectionSize = bb.getInt();
         if (otherMD5SectionSize != VpkOtherMd5Section.SIZE) {
             throw new VpkException("wrong size of otherMD5Section");
         }
 
-        int signatureSectionSize = r.readUInt();
+        int signatureSectionSize = bb.getInt();
 
         return new VpkHeader2(fileDataSectionSize, archiveMD5SectionSize, otherMD5SectionSize, signatureSectionSize);
     }

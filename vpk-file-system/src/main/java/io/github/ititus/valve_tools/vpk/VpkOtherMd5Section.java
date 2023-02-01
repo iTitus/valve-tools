@@ -1,6 +1,7 @@
 package io.github.ititus.valve_tools.vpk;
 
-import java.io.IOException;
+import io.github.ititus.valve_tools.vpk.internal.IoUtil;
+
 import java.nio.ByteBuffer;
 
 public class VpkOtherMd5Section {
@@ -17,10 +18,10 @@ public class VpkOtherMd5Section {
         this.totalChecksum = totalChecksum;
     }
 
-    static VpkOtherMd5Section load(DataReader r) throws IOException {
-        var treeChecksum = r.readByteBuffer(16).asReadOnlyBuffer();
-        var archiveMd5SectionChecksum = r.readByteBuffer(16).asReadOnlyBuffer();
-        var totalChecksum = r.readByteBuffer(16).asReadOnlyBuffer();
+    static VpkOtherMd5Section load(ByteBuffer bb) {
+        var treeChecksum = IoUtil.sliceAdvance(bb, 16).asReadOnlyBuffer();
+        var archiveMd5SectionChecksum = IoUtil.sliceAdvance(bb, 16).asReadOnlyBuffer();
+        var totalChecksum = IoUtil.sliceAdvance(bb, 16).asReadOnlyBuffer();
         return new VpkOtherMd5Section(treeChecksum, archiveMd5SectionChecksum, totalChecksum);
     }
 

@@ -11,8 +11,8 @@ public final class VpkDirEntry extends VpkEntry {
 
     private final Map<String, VpkEntry> children;
 
-    VpkDirEntry(VpkDirEntry parent, String name) {
-        super(parent, name);
+    VpkDirEntry(VpkFile file, VpkDirEntry parent, String name) {
+        super(file, parent, name);
         this.children = new HashMap<>();
     }
 
@@ -24,44 +24,53 @@ public final class VpkDirEntry extends VpkEntry {
         return children.values();
     }
 
-    public VpkEntry resolve(String name) throws IOException {
+    public VpkEntry resolve(CharSequence name) throws IOException {
         return resolveOrCreate(name, Mode.ANY);
     }
 
-    public VpkEntry resolveFile(String name) throws IOException {
-        return resolveOrCreate(name, Mode.FILE);
+    public VpkFileEntry resolveFile(CharSequence name) throws IOException {
+        return (VpkFileEntry) resolveOrCreate(name, Mode.FILE);
     }
 
-    public VpkEntry resolveDir(String name) throws IOException {
-        return resolveOrCreate(name, Mode.DIR);
+    public VpkDirEntry resolveDir(CharSequence name) throws IOException {
+        return (VpkDirEntry) resolveOrCreate(name, Mode.DIR);
     }
 
-    VpkDirEntry resolveOrCreateDirs(String name) throws IOException {
+    VpkDirEntry resolveOrCreateDirs(CharSequence name) throws IOException {
         return (VpkDirEntry) resolveOrCreate(name, Mode.CREATE_DIRS);
     }
 
-    private VpkEntry resolveOrCreate(String name, Mode mode) throws IOException {
-        if (name.isEmpty() || ".".equals(name)) {
+    private VpkEntry resolveOrCreate(CharSequence name, Mode mode) throws IOException {
+        if (name.isEmpty() || ".".contentEquals(name)) {
             return this;
-        } else if ("..".equals(name)) {
-            if (getParent() == null) {
+        } else if ("..".contentEquals(name)) {
+            var parent = getParent();
+            if (parent == null) {
                 throw new NoSuchFileException("root dir does not have a parent");
             }
 
-            return getParent();
+            return parent;
         }
 
-        int i = name.indexOf('/');
-        if (i < 0) {
-            VpkEntry child = children.get(name);
+        int idx = -1;
+        for (int i = 0, len = name.length(); i < len; i++) {
+            if (name.charAt(i) == '/') {
+                idx = i;
+                break;
+            }
+        }
+
+        if (idx < 0) {
+            String nameStr = name.toString();
+            VpkEntry child = children.get(nameStr);
             if (child == null) {
                 switch (mode) {
                     case CREATE_DIR, CREATE_DIRS -> {
-                        child = new VpkDirEntry(this, name);
+                        child = new VpkDirEntry(getFile(), this, nameStr);
                         addChild(child);
                     }
                     case CREATE_FILE, CREATE_FILE_AND_PARENT_DIRS -> throw new UnsupportedOperationException();
-                    default -> throw new NoSuchFileException("entry '" + name + "' not found");
+                    default -> throw new NoSuchFileException("entry '" + nameStr + "' not found");
                 }
             }
 
@@ -73,12 +82,12 @@ public final class VpkDirEntry extends VpkEntry {
 
             return child;
         } else {
-            String firstName = name.substring(0, i);
+            CharSequence firstName = name.subSequence(0, idx);
             VpkDirEntry parent = (VpkDirEntry) resolveOrCreate(firstName, switch (mode) {
                 case CREATE_DIRS, CREATE_FILE_AND_PARENT_DIRS -> Mode.CREATE_DIRS;
                 default -> Mode.DIR;
             });
-            return parent.resolveOrCreate(name.substring(i + 1), mode);
+            return parent.resolveOrCreate(name.subSequence(idx + 1, name.length()), mode);
         }
     }
 

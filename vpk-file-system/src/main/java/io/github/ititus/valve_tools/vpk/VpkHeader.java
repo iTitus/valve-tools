@@ -1,6 +1,7 @@
 package io.github.ititus.valve_tools.vpk;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 public class VpkHeader {
 
@@ -14,14 +15,14 @@ public class VpkHeader {
         this.treeSize = treeSize;
     }
 
-    static VpkHeader load(DataReader r) throws IOException {
-        int signature = r.readUInt();
+    static VpkHeader load(ByteBuffer bb) throws IOException {
+        int signature = bb.getInt();
         if (signature != VpkFile.SIGNATURE) {
             throw new VpkException("invalid vpk signature");
         }
 
-        int version = r.readUInt();
-        int treeSize = r.readUInt();
+        int version = bb.getInt();
+        int treeSize = bb.getInt();
         return new VpkHeader(version, treeSize);
     }
 

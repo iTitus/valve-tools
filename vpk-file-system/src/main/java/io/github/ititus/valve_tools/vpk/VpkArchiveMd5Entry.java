@@ -1,6 +1,7 @@
 package io.github.ititus.valve_tools.vpk;
 
-import java.io.IOException;
+import io.github.ititus.valve_tools.vpk.internal.IoUtil;
+
 import java.nio.ByteBuffer;
 
 public class VpkArchiveMd5Entry {
@@ -19,11 +20,11 @@ public class VpkArchiveMd5Entry {
         this.checksum = checksum;
     }
 
-    static VpkArchiveMd5Entry load(DataReader r) throws IOException {
-        var archiveIndex = r.readUInt();
-        var offset = r.readUInt();
-        var length = r.readUInt();
-        var checksum = r.readByteBuffer(16).asReadOnlyBuffer();
+    static VpkArchiveMd5Entry load(ByteBuffer bb) {
+        var archiveIndex = bb.getInt();
+        var offset = bb.getInt();
+        var length = bb.getInt();
+        var checksum = IoUtil.sliceAdvance(bb, 16).asReadOnlyBuffer();
         return new VpkArchiveMd5Entry(archiveIndex, offset, length, checksum);
     }
 

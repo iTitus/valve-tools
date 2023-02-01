@@ -1,6 +1,7 @@
 package io.github.ititus.valve_tools.vpk;
 
-import java.io.IOException;
+import io.github.ititus.valve_tools.vpk.internal.IoUtil;
+
 import java.nio.ByteBuffer;
 
 public class VpkSignatureSection {
@@ -17,12 +18,12 @@ public class VpkSignatureSection {
         this.signature = signature;
     }
 
-    static VpkSignatureSection load(DataReader r) throws IOException {
-        var publicKeySize = r.readUInt();
-        var publicKey = r.readByteBuffer(publicKeySize).asReadOnlyBuffer();
+    static VpkSignatureSection load(ByteBuffer bb) {
+        var publicKeySize = bb.getInt();
+        var publicKey = IoUtil.sliceAdvance(bb, publicKeySize).asReadOnlyBuffer();
 
-        var signatureSize = r.readUInt();
-        var signature = r.readByteBuffer(signatureSize).asReadOnlyBuffer();
+        var signatureSize = bb.getInt();
+        var signature = IoUtil.sliceAdvance(bb, signatureSize).asReadOnlyBuffer();
 
         return new VpkSignatureSection(publicKeySize, publicKey, signatureSize, signature);
     }

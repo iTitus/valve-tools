@@ -1,10 +1,15 @@
 package io.github.ititus.valve_tools.vpk;
 
 import io.github.ititus.commons.io.PathUtil;
+import io.github.ititus.valve_tools.vpk.internal.ByteBufferChannel;
+import io.github.ititus.valve_tools.vpk.internal.IoUtil;
+import io.github.ititus.valve_tools.vpk.internal.WrappedFileChannel;
 
-import java.io.*;
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -15,7 +20,6 @@ import java.util.Locale;
 public class VpkFile {
 
     static final int SIGNATURE = 0x55aa1234;
-    private static final int MAP_THRESHOLD = 8192;
 
     private final Path path;
     private final VpkHeader headerV1;
@@ -25,11 +29,11 @@ public class VpkFile {
     private final VpkOtherMd5Section otherMd5Section;
     private final VpkSignatureSection signatureSection;
 
-    private VpkFile(Path path, VpkHeader headerV1, VpkHeader2 headerV2, VpkDirEntry rootEntry, List<VpkArchiveMd5Entry> archiveMd5Entries, VpkOtherMd5Section otherMd5Section, VpkSignatureSection signatureSection) {
+    private VpkFile(Path path, VpkHeader headerV1, VpkHeader2 headerV2, List<VpkArchiveMd5Entry> archiveMd5Entries, VpkOtherMd5Section otherMd5Section, VpkSignatureSection signatureSection) {
         this.path = path;
         this.headerV1 = headerV1;
         this.headerV2 = headerV2;
-        this.rootEntry = rootEntry;
+        this.rootEntry = new VpkDirEntry(this, null, "");
         this.archiveMd5Entries = archiveMd5Entries;
         this.otherMd5Section = otherMd5Section;
         this.signatureSection = signatureSection;
@@ -37,144 +41,103 @@ public class VpkFile {
 
     public static VpkFile load(Path path) throws IOException {
         path = PathUtil.resolveRealFile(path);
-        try (InputStream is = new BufferedInputStream(Files.newInputStream(path))) {
-            return load(path, is);
+        try (var fch = FileChannel.open(path, StandardOpenOption.READ)) {
+            return load(path, fch.map(FileChannel.MapMode.READ_ONLY, 0, fch.size()).order(ByteOrder.LITTLE_ENDIAN));
+        } catch (UnsupportedOperationException ignored) {
+            try (var ch = Files.newByteChannel(path, StandardOpenOption.READ)) {
+                return loadFromChannel(path, ch);
+            }
         }
     }
 
-    private static VpkFile load(Path path, InputStream is) throws IOException {
-        return load(path, new DataReader() {
-
-            @Override
-            public byte readByte() throws IOException {
-                int n = is.read();
-                if (n == -1) {
-                    throw new EOFException();
-                }
-
-                return (byte) n;
-            }
-
-            @Override
-            public void read(ByteBuffer target, long size) throws IOException {
-                var sizeInt = Math.toIntExact(size);
-                if (target.hasArray()) {
-                    if (is.readNBytes(target.array(), target.arrayOffset() + target.position(), sizeInt) != sizeInt) {
-                        throw new EOFException();
-                    }
-                    target.position(target.position() + sizeInt);
-                } else {
-                    byte[] arr = new byte[sizeInt];
-                    if (is.readNBytes(arr, 0, sizeInt) != sizeInt) {
-                        throw new EOFException();
-                    }
-                    target.put(arr, 0, sizeInt);
-                }
-            }
-
-            @Override
-            public void skip(long n) throws IOException {
-                if (n < 0) {
-                    throw new IllegalArgumentException();
-                }
-
-                is.skipNBytes(n);
-            }
-        });
+    private static VpkFile load(Path path, ByteBuffer bb) throws IOException {
+        return loadFromBuf(path, bb.order(ByteOrder.LITTLE_ENDIAN));
     }
 
-    private static VpkFile load(Path path, DataInput di) throws IOException {
-        return load(path, new DataReader() {
-
-            @Override
-            public byte readByte() throws IOException {
-                return di.readByte();
-            }
-
-            @Override
-            public void read(ByteBuffer target, long size) throws IOException {
-                var sizeInt = Math.toIntExact(size);
-                if (target.hasArray()) {
-                    di.readFully(target.array(), target.arrayOffset() + target.position(), sizeInt);
-                    target.position(target.position() + sizeInt);
-                } else {
-                    byte[] arr = new byte[sizeInt];
-                    di.readFully(arr, 0, sizeInt);
-                    target.put(arr, 0, sizeInt);
-                }
-            }
-
-            @Override
-            public void skip(long n) throws IOException {
-                if (n < 0) {
-                    throw new IllegalArgumentException();
-                }
-
-                var intN = Math.toIntExact(n);
-                while (intN > 0) {
-                    var ns = di.skipBytes(intN);
-                    if (ns > 0 && ns <= intN) {
-                        intN -= ns;
-                    } else if (ns == 0) {
-                        readByte();
-                        intN--;
-                    } else {
-                        throw new IOException("unable to skip exactly");
-                    }
-                }
-            }
-        });
-    }
-
-    private static VpkFile load(Path path, DataReader r) throws IOException {
-        VpkHeader headerV1 = VpkHeader.load(r);
+    private static VpkFile loadFromBuf(Path path, ByteBuffer bb) throws IOException {
+        VpkHeader headerV1 = VpkHeader.load(bb);
         VpkHeader2 headerV2 = null;
         if (headerV1.getVersion() == 2) {
-            headerV2 = VpkHeader2.load(r);
+            headerV2 = VpkHeader2.load(bb);
         } else if (headerV1.getVersion() != 1) {
             throw new VpkException("unknown version " + headerV1.getVersion());
         }
-
-        VpkDirEntry rootEntry = readTree(r);
 
         List<VpkArchiveMd5Entry> archiveMd5Entries = null;
         VpkOtherMd5Section otherMd5Section = null;
         VpkSignatureSection signatureSection = null;
         if (headerV2 != null) {
-            // assume that the actual directory index has the same size as advertised
-            r.skip(headerV2.getFileDataSectionSize());
+            // skip file data section
+            bb.position(Math.toIntExact(VpkHeader.SIZE + VpkHeader2.SIZE + headerV1.getTreeSize() + headerV2.getFileDataSectionSize()));
 
             int archiveMd5SectionSize = headerV2.getArchiveMD5SectionSizeInt();
             int count = Integer.divideUnsigned(archiveMd5SectionSize, VpkArchiveMd5Entry.SIZE);
             archiveMd5Entries = new ArrayList<>(count);
             for (int i = 0; Integer.compareUnsigned(i, count) < 0; i++) {
-                archiveMd5Entries.add(VpkArchiveMd5Entry.load(r));
+                archiveMd5Entries.add(VpkArchiveMd5Entry.load(bb));
             }
 
-            otherMd5Section = VpkOtherMd5Section.load(r);
+            otherMd5Section = VpkOtherMd5Section.load(bb);
 
             if (headerV2.getSignatureSectionSize() != 0) {
-                signatureSection = VpkSignatureSection.load(r);
+                signatureSection = VpkSignatureSection.load(bb);
             }
         }
 
-        return new VpkFile(path, headerV1, headerV2, rootEntry, archiveMd5Entries != null ? List.copyOf(archiveMd5Entries) : null, otherMd5Section, signatureSection);
+        VpkFile vpkFile = new VpkFile(path, headerV1, headerV2, archiveMd5Entries != null ? List.copyOf(archiveMd5Entries) : null, otherMd5Section, signatureSection);
+        bb.position(VpkHeader.SIZE + (headerV2 != null ? VpkHeader2.SIZE : 0));
+        vpkFile.readTree(bb);
+        return vpkFile;
     }
 
-    private static VpkDirEntry readTree(DataReader r) throws IOException {
-        VpkDirEntry rootEntry = new VpkDirEntry(null, "");
+    private static VpkFile loadFromChannel(Path path, SeekableByteChannel ch) throws IOException {
+        VpkHeader headerV1 = VpkHeader.load(IoUtil.sliceAdvance(ch, VpkHeader.SIZE));
+        VpkHeader2 headerV2 = null;
+        if (headerV1.getVersion() == 2) {
+            headerV2 = VpkHeader2.load(IoUtil.sliceAdvance(ch, VpkHeader2.SIZE));
+        } else if (headerV1.getVersion() != 1) {
+            throw new VpkException("unknown version " + headerV1.getVersion());
+        }
 
-        for (String extension; !(extension = r.readString()).isEmpty(); ) {
-            for (String path; !(path = r.readString()).isEmpty(); ) {
+        var treeBuf = IoUtil.sliceAdvance(ch, Math.toIntExact(headerV1.getTreeSize()));
+
+        List<VpkArchiveMd5Entry> archiveMd5Entries = null;
+        VpkOtherMd5Section otherMd5Section = null;
+        VpkSignatureSection signatureSection = null;
+        if (headerV2 != null) {
+            // skip file data section
+            ch.position(Math.toIntExact(VpkHeader.SIZE + VpkHeader2.SIZE + headerV1.getTreeSize() + headerV2.getFileDataSectionSize()));
+
+            int archiveMd5SectionSize = headerV2.getArchiveMD5SectionSizeInt();
+            var archiveMd5SectionBuf = IoUtil.sliceAdvance(ch, archiveMd5SectionSize);
+            int count = Integer.divideUnsigned(archiveMd5SectionSize, VpkArchiveMd5Entry.SIZE);
+            archiveMd5Entries = new ArrayList<>(count);
+            for (int i = 0; Integer.compareUnsigned(i, count) < 0; i++) {
+                archiveMd5Entries.add(VpkArchiveMd5Entry.load(archiveMd5SectionBuf));
+            }
+
+            otherMd5Section = VpkOtherMd5Section.load(IoUtil.sliceAdvance(ch, VpkOtherMd5Section.SIZE));
+
+            if (headerV2.getSignatureSectionSize() != 0) {
+                signatureSection = VpkSignatureSection.load(IoUtil.sliceAdvance(ch, Math.toIntExact(ch.size() - ch.position())));
+            }
+        }
+
+        VpkFile vpkFile = new VpkFile(path, headerV1, headerV2, archiveMd5Entries != null ? List.copyOf(archiveMd5Entries) : null, otherMd5Section, signatureSection);
+        vpkFile.readTree(treeBuf);
+        return vpkFile;
+    }
+
+    private void readTree(ByteBuffer bb) throws IOException {
+        for (String extension; !(extension = IoUtil.readString(bb)).isEmpty(); ) {
+            for (String path; !(path = IoUtil.readString(bb)).isEmpty(); ) {
                 VpkDirEntry dirEntry = " ".equals(path) ? rootEntry : rootEntry.resolveOrCreateDirs(path);
-                for (String name; !(name = r.readString()).isEmpty(); ) {
+                for (String name; !(name = IoUtil.readString(bb)).isEmpty(); ) {
                     String fullName = name + (" ".equals(extension) ? "" : "." + extension);
-                    dirEntry.addChild(VpkFileEntry.load(dirEntry, fullName, r));
+                    dirEntry.addChild(VpkFileEntry.load(dirEntry, fullName, bb));
                 }
             }
         }
-
-        return rootEntry;
     }
 
     public Path getPath() {
@@ -209,14 +172,23 @@ public class VpkFile {
         return rootEntry.resolve(path);
     }
 
-    public VpkEntry resolveFile(String path) throws IOException {
+    public VpkFileEntry resolveFile(String path) throws IOException {
         return rootEntry.resolveFile(path);
     }
 
-    ByteBuffer loadContent(VpkFileEntry file) throws IOException {
+    public VpkDirEntry resolveDir(String path) throws IOException {
+        return rootEntry.resolveDir(path);
+    }
+
+    SeekableByteChannel loadContent(VpkFileEntry file) throws IOException {
         var length = file.getEntryLength();
-        if (length == 0) {
+        if (length <= 0) {
             return null;
+        }
+
+        var entry = file.getEntry();
+        if (entry != null) {
+            return new ByteBufferChannel(entry);
         }
 
         long offset;
@@ -239,20 +211,6 @@ public class VpkFile {
             path = this.path;
         }
 
-        try (FileChannel ch = FileChannel.open(path, StandardOpenOption.READ)) {
-            var size = ch.size();
-            if (size < offset || (size - offset) < length) {
-                throw new VpkException("not enough bytes in file to read full data");
-            }
-
-            if (length < MAP_THRESHOLD) {
-                var bb = ByteBuffer.allocate((int) length);
-                ch.read(bb, offset);
-                bb.flip();
-                return bb;
-            }
-
-            return ch.map(FileChannel.MapMode.READ_ONLY, offset, length);
-        }
+        return new WrappedFileChannel(FileChannel.open(path, StandardOpenOption.READ), offset, length);
     }
 }
