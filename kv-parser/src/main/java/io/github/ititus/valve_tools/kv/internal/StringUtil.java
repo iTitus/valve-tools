@@ -50,18 +50,30 @@ public final class StringUtil {
 
                 char escape = s.charAt(++i);
                 c = switch (escape) {
-                    case '"' -> '"';
-                    case '\\' -> '\\';
-                    case 'n' -> '\n';
-                    case 't' -> '\t';
-                    case 'v' -> '\u000b';
-                    case 'b' -> '\b';
-                    case 'r' -> '\r';
-                    case 'f' -> '\f';
-                    case 'a' -> '\u0007';
-                    case '?' -> '?';
-                    case '\'' -> '\'';
-                    default -> throw new IllegalArgumentException("unknown escape character '" + escape + "'");
+                    case '"' ->
+                            '"';
+                    case '\\' ->
+                            '\\';
+                    case 'n' ->
+                            '\n';
+                    case 't' ->
+                            '\t';
+                    case 'v' ->
+                            '\u000b';
+                    case 'b' ->
+                            '\b';
+                    case 'r' ->
+                            '\r';
+                    case 'f' ->
+                            '\f';
+                    case 'a' ->
+                            '\u0007';
+                    case '?' ->
+                            '?';
+                    case '\'' ->
+                            '\'';
+                    default ->
+                            throw new IllegalArgumentException("unknown escape character '" + escape + "'");
                 };
             } else if (c == '\"') {
                 throw new IllegalArgumentException("invalid unescaped character '" + c + "'");
@@ -84,18 +96,28 @@ public final class StringUtil {
         for (int i = 0, len = s.length(); i < len; i++) {
             char c = s.charAt(i);
             switch (c) {
-                case '\\' -> b.append('\\').append('\\');
-                case '"' -> b.append('\\').append('"');
-                case '\n' -> b.append('\\').append('n');
-                case '\t' -> b.append('\\').append('t');
-                case '\u000b' -> b.append('\\').append('v');
-                case '\b' -> b.append('\\').append('b');
-                case '\r' -> b.append('\\').append('r');
-                case '\f' -> b.append('\\').append('f');
-                case '\u0007' -> b.append('\\').append('a');
+                case '\\' ->
+                        b.append('\\').append('\\');
+                case '"' ->
+                        b.append('\\').append('"');
+                case '\n' ->
+                        b.append('\\').append('n');
+                case '\t' ->
+                        b.append('\\').append('t');
+                case '\u000b' ->
+                        b.append('\\').append('v');
+                case '\b' ->
+                        b.append('\\').append('b');
+                case '\r' ->
+                        b.append('\\').append('r');
+                case '\f' ->
+                        b.append('\\').append('f');
+                case '\u0007' ->
+                        b.append('\\').append('a');
                 // case '?' -> b.append('\\').append('?');
                 // case '\'' -> b.append('\\').append('\'');
-                default -> b.append(c);
+                default ->
+                        b.append(c);
             }
         }
 
