@@ -15,7 +15,7 @@ dependencies {
     implementation project(':steam-web-api')
     implementation project(':vpk-file-system')
 
-    implementation 'info.picocli:picocli:4.7.2'
+    implementation 'info.picocli:picocli:4.7.3'
 }
 
 jlink {
