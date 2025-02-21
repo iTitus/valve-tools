@@ -1,14 +1,12 @@
 package io.github.ititus.valve_tools.source_map_lib;
 
-import info.ata4.bsplib.BspFile;
-import info.ata4.bsplib.BspFileReader;
-import info.ata4.bsplib.app.SourceAppId;
-import info.ata4.bsplib.entity.Entity;
-import info.ata4.bsplib.struct.BspData;
+import info.ata4.bspsrc.lib.BspFile;
+import info.ata4.bspsrc.lib.BspFileReader;
+import info.ata4.bspsrc.lib.app.SourceAppId;
+import info.ata4.bspsrc.lib.entity.Entity;
+import info.ata4.bspsrc.lib.struct.BspData;
 import io.github.ititus.commons.io.PathUtil;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Predicate;
@@ -214,8 +212,8 @@ public final class MapInfo implements Comparable<MapInfo> {
 
                 loadedLumps.add(lump);
             }
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 

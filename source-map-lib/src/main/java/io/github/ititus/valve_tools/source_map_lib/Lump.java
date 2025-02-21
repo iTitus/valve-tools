@@ -1,13 +1,13 @@
 package io.github.ititus.valve_tools.source_map_lib;
 
-import info.ata4.bsplib.BspFileReader;
-import info.ata4.bsplib.lump.LumpType;
-import info.ata4.bsplib.struct.BspData;
+import info.ata4.bspsrc.lib.BspFileReader;
+import info.ata4.bspsrc.lib.lump.LumpType;
+import info.ata4.bspsrc.lib.struct.BspData;
 
 import java.util.*;
 import java.util.function.Consumer;
 
-import static info.ata4.bsplib.lump.LumpType.*;
+import static info.ata4.bspsrc.lib.lump.LumpType.*;
 
 public enum Lump {
 

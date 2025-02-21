@@ -2,8 +2,7 @@ package io.github.ititus.valve_tools.source_map_lib;
 
 import io.github.ititus.commons.data.Lazy;
 
-import java.io.UncheckedIOException;
-import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 
 public final class WorkshopData implements Comparable<WorkshopData> {
@@ -17,9 +16,9 @@ public final class WorkshopData implements Comparable<WorkshopData> {
         this.workshopId = workshopId;
         this.workshopUrl = Lazy.of(() -> {
             try {
-                return new URL("https://steamcommunity.com/sharedfiles/filedetails/?id=" + workshopId);
-            } catch (MalformedURLException e) {
-                throw new UncheckedIOException(e);
+                return new URI("https://steamcommunity.com/sharedfiles/filedetails/?id=" + workshopId).toURL();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
         });
     }

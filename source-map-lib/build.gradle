@@ -5,5 +5,7 @@ plugins {
 dependencies {
     implementation project(':steam-api')
 
-    api files('libs/bspsrc-1.4.3.jar')
+    api files('libs/bspsrc-common-1.4.7-SNAPSHOT.jar')
+    api files('libs/bspsrc-lib-1.4.7-SNAPSHOT.jar')
+    api files('libs/bspsrc-decompiler-1.4.7-SNAPSHOT.jar')
 }
