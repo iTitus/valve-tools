@@ -1,6 +1,6 @@
 plugins {
     id 'valve-tools.java-application-conventions'
-    id 'org.beryx.jlink' version '3.1.1'
+    id 'org.beryx.jlink' version '3.1.2'
 }
 
 application {
