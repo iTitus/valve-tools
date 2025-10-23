@@ -1,3 +1,33 @@
 plugins {
     id 'java-library'
 }
+
+mavenPublishing {
+    publishToMavenCentral(true)
+    signAllPublications()
+
+    pom {
+        name = 'VPK File System'
+        description = 'Library for Java NIO to add Valve\'s VPK archive format as a File System'
+        url = 'https://github.com/iTitus/valve-tools'
+        licenses {
+            license {
+                name = 'MIT License'
+                url = 'https://mit-license.org'
+            }
+        }
+        developers {
+            developer {
+                id = 'iTitus'
+                name = 'iTitus'
+                email = 'ititus@users.noreply.github.com'
+            }
+        }
+        scm {
+            connection = 'scm:git:git://github.com/iTitus/valve-tools.git'
+            developerConnection = 'scm:git:ssh://git@github.com:iTitus/valve-tools.git'
+            url = 'https://github.com/iTitus/valve-tools'
+            tag = "v${version}"
+        }
+    }
+}

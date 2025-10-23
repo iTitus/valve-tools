@@ -5,3 +5,33 @@ plugins {
 dependencies {
     implementation 'com.google.code.gson:gson:2.13.2'
 }
+
+mavenPublishing {
+    publishToMavenCentral(true)
+    signAllPublications()
+
+    pom {
+        name = 'Steam Web API'
+        description = 'Interface for the Steam Web API'
+        url = 'https://github.com/iTitus/valve-tools'
+        licenses {
+            license {
+                name = 'MIT License'
+                url = 'https://mit-license.org'
+            }
+        }
+        developers {
+            developer {
+                id = 'iTitus'
+                name = 'iTitus'
+                email = 'ititus@users.noreply.github.com'
+            }
+        }
+        scm {
+            connection = 'scm:git:git://github.com/iTitus/valve-tools.git'
+            developerConnection = 'scm:git:ssh://git@github.com:iTitus/valve-tools.git'
+            url = 'https://github.com/iTitus/valve-tools'
+            tag = "v${version}"
+        }
+    }
+}
