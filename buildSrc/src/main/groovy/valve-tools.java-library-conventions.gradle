@@ -1,4 +1,0 @@
-plugins {
-    id 'valve-tools.java-common-conventions'
-    id 'java-library'
-}

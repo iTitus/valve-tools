@@ -1,5 +1,5 @@
 plugins {
-    id 'valve-tools.java-library-conventions'
+    id 'java-library'
 }
 
 dependencies {

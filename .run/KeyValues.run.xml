@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="KeyValues" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="io.github.ititus.valve_tools.source_map_analyzer.CLI" />
+    <module name="valve-tools.source-map-analyzer.main" />
+    <option name="PROGRAM_PARAMETERS" value="kv" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
